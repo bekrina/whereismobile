@@ -33,22 +33,36 @@
     <string name="contacts_permission_rationale">Contacts access is needed in order to retrieve your email address.</string>
 
     <!-- Activity Names and Descriptions -->
-    <string name="desc_rest_activity">Login using Google Sign In with a Google REST API</string>
-    <string name="name_rest_activity">LoginActivity</string>
+    <string name="desc_login_activity">Login using Google Sign In with a Google REST API</string>
+    <string name="name_login_activity">LoginActivity</string>
 
-    <!-- Messages for the Rest API activity -->
+    <!-- For Login activity -->
     <string name="connections_fmt">Connections: %1$s</string>
-    <string name="msg_contacts_failed">Failed to login.</string>
+    <string name="msg_contacts_failed">Failed to log in.</string>
+    <string name="error_during_login">Sorry, an error occurred. Please try again!</string>
+    <string name="login_failed">Failed to sign in</string>
+    <string name="login_successfull">You are logged in!</string>
 
+    <!-- For Create Group activity-->
+    <string name="lets_create_new_group">Let\'s create a new group!</string>
+    <string name="group_name_field">Enter group name</string>
+    <string name="submit">Submit</string>
+    <!-- Menu for Create Group activity -->
     <string name="no_group_menu_item">You are not in the group. Lets create or join one!</string>
     <string name="create_group_menu_item">Create group</string>
     <string name="join_group_menu_item">Join group</string>
+    <string name="invite_to_group">Invite to group</string>
     <string name="leave_group_menu_item">Leave group</string>
     <string name="settings_menu_item">Settings</string>
     <string name="sign_out_menu_item">Sign out</string>
 
+    <!-- For Map activity -->
+    <string name="user_location_marker">You are here</string>
+
     <!-- URL's -->
-    <string name="api_adress">https://rocky-river-45878.herokuapp.com/api</string>
+    <string name="api_url">https://rocky-river-45878.herokuapp.com/api</string>
     <string name="initial_cookie_url">/config.json</string>
+    <string name="login_url">/login</string>
     <string name="get_groups_url">/group/getforcurrentuser</string>
+    <string name="create_group_url">/group</string>
 </resources>

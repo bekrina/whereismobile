@@ -30,6 +30,10 @@
         </activity>
         <activity android:name=".ui.MapActivity" >
         </activity>
+        <activity android:name=".ui.CreateGroupActivity" >
+        </activity>
+        <activity android:name=".ui.GroupInfoActivity" >
+        </activity>
         <service android:name=".services.LocationService" />
     </application>
 </manifest>
