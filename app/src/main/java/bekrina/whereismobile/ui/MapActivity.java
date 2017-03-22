@@ -27,8 +27,11 @@ import com.android.volley.toolbox.JsonArrayRequest;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
+import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -46,6 +49,8 @@ import bekrina.whereismobile.R;
 import bekrina.whereismobile.services.LocationService;
 import bekrina.whereismobile.util.Constants;
 import bekrina.whereismobile.util.SingletonNetwork;
+
+import static bekrina.whereismobile.util.Constants.*;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
@@ -104,11 +109,16 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     protected void onStart() {
         super.onStart();
 
+        connectToGoogleApi();
+    }
+
+    public void connectToGoogleApi() {
         if (mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
                     .addConnectionCallbacks(this)
                     .addOnConnectionFailedListener(this)
                     .addApi(LocationServices.API)
+                    .addApi(Auth.GOOGLE_SIGN_IN_API)
                     .addApi(AppIndex.API).build();
             mGoogleApiClient.connect();
         }
@@ -130,6 +140,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     @Override
     protected void onRestart() {
         super.onRestart();
+        connectToGoogleApi();
         processGroupStatus();
     }
 
@@ -215,7 +226,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     public void processGroupStatus() {
         JsonArrayRequest groupRequest = new JsonArrayRequest(Request.Method.GET,
-                getString(R.string.api_url) + getString(R.string.get_groups_url), null,
+                GROUP_ENDPOINT + GET_GROUPS_ACTION, null,
                 new Response.Listener<JSONArray>() {
                     @Override
                     public void onResponse(JSONArray response) {
@@ -280,6 +291,26 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         return true;
     }
 
+    public void signOut() {
+        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
+                new ResultCallback<Status>() {
+                    @Override
+                    public void onResult(Status status) {
+                        Log.d(TAG, "signOut:onResult:" + status);
+                        // Remove cookies
+                        mNetwork.mCookieManager.getCookieStore().removeAll();
+                        // Remove information about group
+                        SharedPreferences sharedPreferences = getSharedPreferences(GROUP_INFO_PREFERENCES, 0);
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.remove(GROUP_NAME);
+                        editor.remove(GROUP_IDENTITY);
+                        editor.apply();
+                        // Start login activity
+                        Intent loginActivityIntent = new Intent(getBaseContext(), LoginActivity.class);
+                        startActivity(loginActivityIntent);
+                    }
+                });
+    }
     //TODO: complete this method
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -298,7 +329,11 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 startActivity(inviteIntent);
                 return true;
             case R.id.join_group_menu_item:
+                Intent joinIntent = new Intent(getBaseContext(), JoinGroupActivity.class);
+                startActivity(joinIntent);
                 return true;
+            case R.id.sign_out_menu_item:
+                signOut();
             default:
                 return super.onOptionsItemSelected(item);
         }

@@ -14,7 +14,7 @@ public class SingletonNetwork {
     private static SingletonNetwork sInstance;
     private RequestQueue mRequestQueue;
     private Context mCtx;
-    private CookieManager mCookieManager;
+    public CookieManager mCookieManager;
 
     private SingletonNetwork(Context context) {
         mCtx = context;
