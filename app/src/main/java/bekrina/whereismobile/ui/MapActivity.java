@@ -2,6 +2,7 @@ package bekrina.whereismobile.ui;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
@@ -43,6 +44,7 @@ import org.json.JSONException;
 
 import bekrina.whereismobile.R;
 import bekrina.whereismobile.services.LocationService;
+import bekrina.whereismobile.util.Constants;
 import bekrina.whereismobile.util.SingletonNetwork;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
@@ -53,8 +55,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private static final int USER_HAS_NO_GROUP = 0;
     private static final int GETTING_LOCATION_INTERVAL = 10000;
     private static final int GETTING_LOCATION_FASTEST_INTERVAL = 5000;
-
-    private static final String GROUP_NAME = "name";
 
     private GoogleMap mGoogleMap;
     private GoogleApiClient mGoogleApiClient;
@@ -85,12 +85,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         mCreateGroupItem.setVisible(false);
                         mJoinGroupItem.setVisible(false);
 
-                        JSONArray jsonArray = (JSONArray) inputMessage.obj;
-                        try {
-                            mGroupNameItem.setTitle(jsonArray.getJSONObject(0).getString(GROUP_NAME));
-                        } catch (JSONException e) {
-                            Log.e(TAG, "mHandler.handleMessage:", e);
-                        }
+                        mGroupNameItem.setTitle(getSharedPreferences(Constants.GROUP_INFO_PREFERENCES, 0)
+                                .getString(Constants.GROUP_NAME, ""));
+
                 }
             }
         };
@@ -226,7 +223,12 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                             message.what = USER_HAS_NO_GROUP;
                         } else {
                             message.what = USER_IN_GROUP;
-                            message.obj = response;
+                            try {
+                                updateGroupInfoPreferences(response.getJSONObject(0).getString(Constants.NAME),
+                                        response.getJSONObject(0).getString(Constants.IDENTITY));
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
                             Intent startServiceIntent = new Intent(MapActivity.this.getBaseContext(),
                                     LocationService.class);
                             startService(startServiceIntent);
@@ -243,6 +245,13 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mNetwork.getRequestQueue().add(groupRequest);
     }
 
+    public void updateGroupInfoPreferences(String name, String identity) {
+        SharedPreferences preferences = getSharedPreferences(Constants.GROUP_INFO_PREFERENCES, 0);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString(Constants.GROUP_NAME, name);
+        editor.putString(Constants.GROUP_IDENTITY, identity);
+        editor.apply();
+    }
     @Override
     public void onConnectionSuspended(int i) {
         //TODO: complete this
@@ -259,11 +268,11 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main_menu, menu);
 
-        mLeaveGroupItem = menu.findItem(R.id.leave_group);
-        mCreateGroupItem = menu.findItem(R.id.create_group);
-        mJoinGroupItem = menu.findItem(R.id.join_group);
-        mGroupNameItem = menu.findItem(R.id.group_name);
-        mInviteToGroupItem = menu.findItem(R.id.invite_to_group);
+        mLeaveGroupItem = menu.findItem(R.id.leave_group_menu_item);
+        mCreateGroupItem = menu.findItem(R.id.create_group_menu_item);
+        mJoinGroupItem = menu.findItem(R.id.join_group_menu_item);
+        mGroupNameItem = menu.findItem(R.id.group_name_menu_item);
+        mInviteToGroupItem = menu.findItem(R.id.invite_to_group_menu_item);
 
         processGroupStatus();
 
@@ -275,14 +284,15 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
-            case R.id.group_name:
+            case R.id.group_name_menu_item:
                 Intent groupInfoIntent = new Intent(getBaseContext(), GroupInfoActivity.class);
                 startActivity(groupInfoIntent);
-            case R.id.create_group:
+                return true;
+            case R.id.create_group_menu_item:
                 Intent createGroupIntent = new Intent(getBaseContext(), CreateGroupActivity.class);
                 startActivity(createGroupIntent);
                 return true;
-            case R.id.join_group:
+            case R.id.join_group_menu_item:
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

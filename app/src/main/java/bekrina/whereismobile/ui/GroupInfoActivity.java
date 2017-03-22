@@ -1,12 +1,13 @@
 package bekrina.whereismobile.ui;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
 import android.widget.TextView;
 
 import bekrina.whereismobile.R;
+import bekrina.whereismobile.util.Constants;
 
 public class GroupInfoActivity extends AppCompatActivity{
     private TextView mGroupName;
@@ -24,10 +25,9 @@ public class GroupInfoActivity extends AppCompatActivity{
     @Override
     public void onStart() {
         super.onStart();
-        String groupName = getIntent().getStringExtra(CreateGroupActivity.GROUP_NAME_EXTRA);
-        mGroupName.setText(groupName);
-        String groupIdentity = getIntent().getStringExtra(CreateGroupActivity.GROUP_IDENTITY_EXTRA);
-        mGroupIdentity.setText(groupIdentity);
+        SharedPreferences preferences = getSharedPreferences(Constants.GROUP_INFO_PREFERENCES, 0);
+        mGroupName.setText(preferences.getString(Constants.GROUP_NAME, ""));
+        mGroupIdentity.setText(preferences.getString(Constants.GROUP_IDENTITY, ""));
     }
 
     @Override
