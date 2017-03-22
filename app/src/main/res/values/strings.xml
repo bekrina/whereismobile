@@ -2,6 +2,7 @@
     <string name="app_name">WhereIs</string>
     <string name="title_text">WhereIs</string>
     <string name="welcome_message">Welcome!</string>
+    <string name="ok">Ok</string>
 
     <!-- Sign-in status messages -->
     <string name="signed_in_fmt">Signed in as: %s</string>
@@ -47,7 +48,10 @@
     <string name="lets_create_new_group">Let\'s create a new group!</string>
     <string name="group_name_field">Enter group name</string>
     <string name="submit">Submit</string>
-    <!-- Menu for Create Group activity -->
+
+    <!-- For Map activity -->
+    <string name="user_location_marker">You are here</string>
+    <!-- Menu for Map activity -->
     <string name="no_group_menu_item">You are not in the group. Lets create or join one!</string>
     <string name="create_group_menu_item">Create group</string>
     <string name="join_group_menu_item">Join group</string>
@@ -56,8 +60,14 @@
     <string name="settings_menu_item">Settings</string>
     <string name="sign_out_menu_item">Sign out</string>
 
-    <!-- For Map activity -->
-    <string name="user_location_marker">You are here</string>
+    <!-- For Invite To Group activity -->
+    <string name="lets_invite_someone">Enter email of person who you want to invite</string>
+    <string name="invitation_email_field">Enter email here</string>
+    <string name="invite_sent_dialog_message">Hooray!</string>
+    <string name="invite_sent_dialog_title">Invite was sent!</string>
+    <string name="invite_already_exists_dialog_message">User already invited to this group</string>
+    <string name="invite_already_exists_dialog_title">Invite exists</string>
+
 
     <!-- URL's -->
     <string name="api_url">https://rocky-river-45878.herokuapp.com/api</string>
@@ -65,4 +75,5 @@
     <string name="login_url">/login</string>
     <string name="get_groups_url">/group/getforcurrentuser</string>
     <string name="create_group_url">/group</string>
+    <string name="invite_to_group_url">/invite</string>
 </resources>

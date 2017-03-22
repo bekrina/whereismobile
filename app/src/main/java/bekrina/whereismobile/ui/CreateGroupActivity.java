@@ -25,8 +25,7 @@ import bekrina.whereismobile.util.Constants;
 import bekrina.whereismobile.util.SingletonNetwork;
 
 public class CreateGroupActivity extends AppCompatActivity {
-    private static final String IDENTITY = "identity";
-    private static final String NAME = "name";
+    private static final String TAG = "CreateGroupActivity";
     private SingletonNetwork mSingletonNetwork;
     private EditText mGroupNameView;
 
@@ -43,7 +42,7 @@ public class CreateGroupActivity extends AppCompatActivity {
             public void onClick(View v) {
                 JSONObject group = new JSONObject();
                 try {
-                    group.put(NAME, mGroupNameView.getText());
+                    group.put(Constants.NAME, mGroupNameView.getText());
                     JsonObjectRequest createGroup = new JsonObjectRequest(Request.Method.PUT,
                             getString(R.string.api_url) + getString(R.string.create_group_url),
                             group, new Response.Listener<JSONObject>() {
@@ -53,24 +52,24 @@ public class CreateGroupActivity extends AppCompatActivity {
                             Intent intent = new Intent(getBaseContext(), GroupInfoActivity.class);
                             SharedPreferences preferences = getSharedPreferences(Constants.GROUP_INFO_PREFERENCES, 0);
                             SharedPreferences.Editor editor = preferences.edit();
-                            editor.putString(Constants.GROUP_NAME, group.getString(NAME));
-                            editor.putString(Constants.GROUP_IDENTITY, group.getString(IDENTITY));
+                            editor.putString(Constants.GROUP_NAME, group.getString(Constants.NAME));
+                            editor.putString(Constants.GROUP_IDENTITY, group.getString(Constants.IDENTITY));
                             editor.apply();
                             startActivity(intent);
                             } catch (JSONException e) {
-                                e.printStackTrace();
+                                Log.e(TAG, "During new group sending:", e);
                             }
                         }
                     }, new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError error) {
-                            Log.e(this.getClass().getName(), "Error during \"get groups\" request", error);
+                            Log.e(TAG, "Error during \"get groups\" request", error);
                         }
                     }) {
                     };
                     mSingletonNetwork.getRequestQueue().add(createGroup);
                 } catch (JSONException e) {
-                    Log.e(this.getClass().getName(), "Error during JSONObject creation", e);
+                    Log.e(TAG, "Error during JSONObject creation", e);
                     //TODO: show popup about error during group creation
                 }
             }

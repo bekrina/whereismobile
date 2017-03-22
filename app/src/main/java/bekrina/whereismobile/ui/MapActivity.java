@@ -129,6 +129,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     @Override
     protected void onRestart() {
+        super.onRestart();
         processGroupStatus();
     }
 
@@ -291,6 +292,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             case R.id.create_group_menu_item:
                 Intent createGroupIntent = new Intent(getBaseContext(), CreateGroupActivity.class);
                 startActivity(createGroupIntent);
+                return true;
+            case R.id.invite_to_group_menu_item:
+                Intent inviteIntent = new Intent(getBaseContext(), InviteToGroupActivity.class);
+                startActivity(inviteIntent);
                 return true;
             case R.id.join_group_menu_item:
                 return true;

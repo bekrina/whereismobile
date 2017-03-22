@@ -34,6 +34,8 @@
         </activity>
         <activity android:name=".ui.GroupInfoActivity" >
         </activity>
+        <activity android:name=".ui.InviteToGroupActivity" >
+        </activity>
         <service android:name=".services.LocationService" />
     </application>
 </manifest>
