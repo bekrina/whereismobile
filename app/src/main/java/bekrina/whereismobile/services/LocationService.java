@@ -58,7 +58,6 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -101,7 +100,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-
+        startLocationUpdates();
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
     }
 

@@ -24,8 +24,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import bekrina.whereismobile.R;
-import bekrina.whereismobile.util.Constants;
 import bekrina.whereismobile.util.SingletonNetwork;
+
+import static bekrina.whereismobile.util.Constants.*;
 
 public class InviteToGroupActivity extends AppCompatActivity {
     public static final String EMAIL = "email";
@@ -49,12 +50,10 @@ public class InviteToGroupActivity extends AppCompatActivity {
                 JSONObject invite = new JSONObject();
                 try {
                     invite.put(EMAIL, mInvitationEmail.getText());
-                    SharedPreferences preferences = getSharedPreferences(Constants.GROUP_INFO_PREFERENCES, 0);
+                    SharedPreferences preferences = getSharedPreferences(GROUP_INFO_PREFERENCES, 0);
                     JsonObjectRequest createGroup = new JsonObjectRequest(Request.Method.POST,
-                            getString(R.string.api_url)
-                                    + getString(R.string.create_group_url)
-                                    + "/" + preferences.getString(Constants.GROUP_IDENTITY, "")
-                                    + getString(R.string.invite_to_group_url),
+                            GROUP_ENDPOINT + "/" + preferences.getString(GROUP_IDENTITY, "")
+                                    + INVITE_ACTION,
                             invite, new Response.Listener<JSONObject>() {
                         @Override
                         public void onResponse(JSONObject response) {

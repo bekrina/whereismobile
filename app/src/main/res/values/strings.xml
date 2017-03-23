@@ -68,12 +68,11 @@
     <string name="invite_already_exists_dialog_message">User already invited to this group</string>
     <string name="invite_already_exists_dialog_title">Invite exists</string>
 
-
-    <!-- URL's -->
-    <string name="api_url">https://rocky-river-45878.herokuapp.com/api</string>
-    <string name="initial_cookie_url">/config.json</string>
-    <string name="login_url">/login</string>
-    <string name="get_groups_url">/group/getforcurrentuser</string>
-    <string name="create_group_url">/group</string>
-    <string name="invite_to_group_url">/invite</string>
+    <!-- For Join Group activity -->
+    <string name="lets_join_a_group">Enter group identity token to join</string>
+    <string name="group_identity_field">Enter group identity here</string>
+    <string name="joined_dialog_message">Let\'s go to map</string>
+    <string name="joined_dialog_title">You joined a new group!</string>
+    <string name="no_invite_for_user_dialog_message">Invite is required for joining</string>
+    <string name="no_invite_for_user_dialog_title">Sorry, you have no invite to this group</string>
 </resources>

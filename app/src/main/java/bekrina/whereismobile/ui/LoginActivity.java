@@ -26,6 +26,7 @@ import bekrina.whereismobile.R;
 import bekrina.whereismobile.util.SingletonNetwork;
 
 import static android.provider.AlarmClock.EXTRA_MESSAGE;
+import static bekrina.whereismobile.util.Constants.*;
 
 public class LoginActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener,
@@ -80,8 +81,7 @@ public class LoginActivity extends AppCompatActivity implements
     private void getAuthCode() {
         final TextView mTextView = (TextView) findViewById(R.id.status);
         // Get unique cookie from server
-        StringRequest requestCookie = new StringRequest(Request.Method.GET,
-                getString(R.string.api_url) + getString(R.string.initial_cookie_url),
+        StringRequest requestCookie = new StringRequest(Request.Method.GET, INITIAL_COOKIE_ENDPOINT,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -145,8 +145,7 @@ public class LoginActivity extends AppCompatActivity implements
                 final TextView mTextView = (TextView) findViewById(R.id.status);
 
                 // Request a string response from the provided URL.
-                StringRequest tokenRequest = new StringRequest(Request.Method.POST,
-                        getString(R.string.api_url) + getString(R.string.login_url),
+                StringRequest tokenRequest = new StringRequest(Request.Method.POST, LOGIN_ENDPOINT,
                         new Response.Listener<String>() {
                             @Override
                             public void onResponse(String response) {

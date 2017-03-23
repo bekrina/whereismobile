@@ -3,9 +3,6 @@ package bekrina.whereismobile.ui;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -23,6 +20,8 @@ import org.json.JSONObject;
 import bekrina.whereismobile.R;
 import bekrina.whereismobile.util.Constants;
 import bekrina.whereismobile.util.SingletonNetwork;
+
+import static bekrina.whereismobile.util.Constants.*;
 
 public class CreateGroupActivity extends AppCompatActivity {
     private static final String TAG = "CreateGroupActivity";
@@ -44,8 +43,7 @@ public class CreateGroupActivity extends AppCompatActivity {
                 try {
                     group.put(Constants.NAME, mGroupNameView.getText());
                     JsonObjectRequest createGroup = new JsonObjectRequest(Request.Method.PUT,
-                            getString(R.string.api_url) + getString(R.string.create_group_url),
-                            group, new Response.Listener<JSONObject>() {
+                            GROUP_ENDPOINT, group, new Response.Listener<JSONObject>() {
                         @Override
                         public void onResponse(JSONObject group) {
                             try {
