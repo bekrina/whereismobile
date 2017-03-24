@@ -24,7 +24,8 @@ import bekrina.whereismobile.util.SingletonNetwork;
 import static bekrina.whereismobile.util.Constants.*;
 
 public class CreateGroupActivity extends AppCompatActivity {
-    private static final String TAG = "CreateGroupActivity";
+    private static final String TAG = CreateGroupActivity.class.getName();
+
     private SingletonNetwork mSingletonNetwork;
     private EditText mGroupNameView;
 

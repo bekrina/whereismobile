@@ -30,7 +30,7 @@ import static bekrina.whereismobile.util.Constants.GROUP_INFO_PREFERENCES;
 import static bekrina.whereismobile.util.Constants.JOIN_ACTION;
 
 public class JoinGroupActivity extends AppCompatActivity {
-    public static final String TAG = "JoinGroupActivity";
+    public static final String TAG = JoinGroupActivity.class.getName();
 
     private EditText mGroupIdentity;
     private SingletonNetwork mNetwork;
