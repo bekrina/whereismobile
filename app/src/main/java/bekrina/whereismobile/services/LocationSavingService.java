@@ -70,8 +70,8 @@ public class LocationSavingService extends Service implements GoogleApiClient.Co
         }
         mLocationRequest = LocationRequest.create();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setInterval(10000);
-        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setInterval(LOCATION_INTERVAL);
+        mLocationRequest.setFastestInterval(LOCATION_FASTEST_INTERVAL);
 
         mSingletonNetwork = SingletonNetwork.getInstance(getBaseContext());
     }

@@ -67,6 +67,8 @@ import static bekrina.whereismobile.util.Constants.GROUP_NAME;
 import static bekrina.whereismobile.util.Constants.LAST_NAME;
 import static bekrina.whereismobile.util.Constants.LAT;
 import static bekrina.whereismobile.util.Constants.LNG;
+import static bekrina.whereismobile.util.Constants.LOCATION_FASTEST_INTERVAL;
+import static bekrina.whereismobile.util.Constants.LOCATION_INTERVAL;
 import static bekrina.whereismobile.util.Constants.OFFSET;
 import static bekrina.whereismobile.util.Constants.USER;
 
@@ -77,8 +79,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 123;
     private static final int USER_IN_GROUP = 1;
     private static final int USER_HAS_NO_GROUP = 0;
-    private static final int GETTING_LOCATION_INTERVAL = 10000;
-    private static final int GETTING_LOCATION_FASTEST_INTERVAL = 5000;
 
     private GoogleMap mGoogleMap;
     private GoogleApiClient mGoogleApiClient;
@@ -170,8 +170,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         if (mLocationRequest == null) {
             mLocationRequest = LocationRequest.create();
             mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-            mLocationRequest.setInterval(GETTING_LOCATION_INTERVAL);
-            mLocationRequest.setFastestInterval(GETTING_LOCATION_FASTEST_INTERVAL);
+            mLocationRequest.setInterval(LOCATION_INTERVAL);
+            mLocationRequest.setFastestInterval(LOCATION_FASTEST_INTERVAL);
         }
     }
 
@@ -393,24 +393,37 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     public void signOut() {
-        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
-                new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(Status status) {
-                        Log.d(TAG, "signOut:onResult:" + status);
-                        // Remove cookies
-                        mNetwork.mCookieManager.getCookieStore().removeAll();
-                        // Remove information about group
-                        SharedPreferences sharedPreferences = getSharedPreferences(GROUP_INFO_PREFERENCES, 0);
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.remove(GROUP_NAME);
-                        editor.remove(GROUP_IDENTITY);
-                        editor.apply();
-                        // Start login activity
-                        Intent loginActivityIntent = new Intent(getBaseContext(), LoginActivity.class);
-                        startActivity(loginActivityIntent);
-                    }
-                });
+        mGoogleApiClient.connect();
+        mGoogleApiClient.registerConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+            @Override
+            public void onConnected(@Nullable Bundle bundle) {
+
+                if (mGoogleApiClient.isConnected()) {
+                    Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
+                            new ResultCallback<Status>() {
+                                @Override
+                                public void onResult(Status status) {
+                                    Log.d(TAG, "signOut:onResult:" + status);
+                                    // Remove cookies
+                                    mNetwork.mCookieManager.getCookieStore().removeAll();
+                                    // Remove information about group
+                                    SharedPreferences sharedPreferences = getSharedPreferences(GROUP_INFO_PREFERENCES, 0);
+                                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                                    editor.remove(GROUP_NAME);
+                                    editor.remove(GROUP_IDENTITY);
+                                    editor.apply();
+                                    // Start login activity
+                                    Intent loginActivityIntent = new Intent(getBaseContext(), LoginActivity.class);
+                                    startActivity(loginActivityIntent);
+                                }
+                            });
+                }
+            }
+            @Override
+            public void onConnectionSuspended(int i) {
+                Log.d(TAG, "Google API Client Connection Suspended");
+            }
+        });
     }
     //TODO: complete this method
     @Override

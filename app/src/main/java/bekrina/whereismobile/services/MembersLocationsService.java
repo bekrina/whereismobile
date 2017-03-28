@@ -19,11 +19,17 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import bekrina.whereismobile.listeners.LocationsUpdatedListener;
 import bekrina.whereismobile.util.SingletonNetwork;
 
-import static bekrina.whereismobile.util.Constants.*;
+import static bekrina.whereismobile.util.Constants.GET_LOCATIONS_ACTION;
+import static bekrina.whereismobile.util.Constants.GROUP_ENDPOINT;
+import static bekrina.whereismobile.util.Constants.GROUP_IDENTITY;
+import static bekrina.whereismobile.util.Constants.GROUP_INFO_PREFERENCES;
 
 
 public class MembersLocationsService extends Service {
@@ -31,6 +37,7 @@ public class MembersLocationsService extends Service {
     private final IBinder mBinder = new MembersLocationsBinder();
     private SingletonNetwork mNetwork;
     private LocationsUpdatedListener mLocationsUpdatedListener;
+
 
     @Nullable
     @Override
@@ -41,7 +48,17 @@ public class MembersLocationsService extends Service {
     public class MembersLocationsBinder extends Binder {
         public MembersLocationsService getService(LocationsUpdatedListener listener) {
             mLocationsUpdatedListener = listener;
-            startContinuousPolling();
+
+            Runnable updateMembersLocations = new Runnable() {
+                @Override
+                public void run() {
+                    MembersLocationsService.this.updateLocations();
+                }
+            };
+
+            ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
+            scheduledExecutorService.scheduleAtFixedRate(updateMembersLocations, 0, 5, TimeUnit.MINUTES);
+
             return MembersLocationsService.this;
         }
     }
@@ -56,11 +73,11 @@ public class MembersLocationsService extends Service {
         mNetwork = SingletonNetwork.getInstance(getBaseContext());
     }
 
-    public void startContinuousPolling() {
-        // TODO: logic for smart polling
-        updateLocations();
-    }
-
+    /*
+     * Use only in MembersLocationBinder.getService() or after binding in activity
+     */
+    // TODO: discuss: it can be accessed from scheduled executor and from activity at the same time.
+    // TODO: it should be synchronized?
     public void updateLocations() {
         SharedPreferences sharedPreferences = getSharedPreferences(GROUP_INFO_PREFERENCES, 0);
 
@@ -71,22 +88,22 @@ public class MembersLocationsService extends Service {
                     @Override
                     public void onResponse(JSONArray response) {
                         try {
-                        List<JSONObject> locations = new ArrayList<>();
-                        for (int i = 0; i < response.length() - 1; i++) {
+                            List<JSONObject> locations = new ArrayList<>();
+                            for (int i = 0; i < response.length() - 1; i++) {
                                 locations.add(response.getJSONObject(i));
-                        }
+                            }
                             Log.d(TAG, "Location received:");
-                        mLocationsUpdatedListener.onMembersLocationsUpdate(locations);
+                            mLocationsUpdatedListener.onMembersLocationsUpdate(locations);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
                     }
                 }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.e(TAG, "Location not received:", error);
-                    }
-                });
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG, "Location not received:", error);
+            }
+        });
         mNetwork.addToRequestQueue(locationsRequest);
     }
 }

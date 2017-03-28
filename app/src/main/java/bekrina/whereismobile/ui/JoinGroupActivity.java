@@ -49,7 +49,6 @@ public class JoinGroupActivity extends AppCompatActivity {
         submit.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 //TODO: check if user entered identity
-                //TODO: change backend to return group
                 //TODO: display group name and change shared prefs for current group
                 SharedPreferences preferences = getSharedPreferences(GROUP_INFO_PREFERENCES, 0);
                 StringRequest joinRequest = new StringRequest(Request.Method.POST,
