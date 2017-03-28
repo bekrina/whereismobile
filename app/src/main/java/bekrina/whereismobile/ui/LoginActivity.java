@@ -31,8 +31,8 @@ import static bekrina.whereismobile.util.Constants.*;
 public class LoginActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener,
         View.OnClickListener {
+    public static final String TAG = LoginActivity.class.getName();
 
-    public static final String TAG = "LoginActivity";
     private static final int RC_GET_AUTH_CODE = 9003;
     private static final String PROPERTIES_FILE = "app.properties";
     private static final String CLIENT_ID_PROPERTY = "client_id";

@@ -38,6 +38,7 @@
         </activity>
         <activity android:name=".ui.JoinGroupActivity" >
         </activity>
-        <service android:name=".services.LocationService" />
+        <service android:name=".services.LocationSavingService" />
+        <service android:name=".services.MembersLocationsService" />
     </application>
 </manifest>

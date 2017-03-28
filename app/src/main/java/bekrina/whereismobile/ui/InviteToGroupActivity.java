@@ -29,8 +29,7 @@ import bekrina.whereismobile.util.SingletonNetwork;
 import static bekrina.whereismobile.util.Constants.*;
 
 public class InviteToGroupActivity extends AppCompatActivity {
-    public static final String EMAIL = "email";
-    public static final String TAG = "InviteToGroupActivity";
+    public static final String TAG = InviteToGroupActivity.class.getName();
 
     private EditText mInvitationEmail;
     private SingletonNetwork mSingletonNetwork;

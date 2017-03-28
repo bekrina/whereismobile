@@ -1,13 +1,15 @@
 package bekrina.whereismobile.ui;
 
 import android.Manifest;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.NonNull;
@@ -24,14 +26,13 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
-import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -44,33 +45,76 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import bekrina.whereismobile.R;
-import bekrina.whereismobile.services.LocationService;
+import bekrina.whereismobile.listeners.LocationsUpdatedListener;
+import bekrina.whereismobile.services.LocationSavingService;
+import bekrina.whereismobile.services.MembersLocationsService;
 import bekrina.whereismobile.util.Constants;
 import bekrina.whereismobile.util.SingletonNetwork;
 
-import static bekrina.whereismobile.util.Constants.*;
+import static bekrina.whereismobile.util.Constants.FIRST_NAME;
+import static bekrina.whereismobile.util.Constants.GET_GROUPS_ACTION;
+import static bekrina.whereismobile.util.Constants.GROUP_ENDPOINT;
+import static bekrina.whereismobile.util.Constants.GROUP_IDENTITY;
+import static bekrina.whereismobile.util.Constants.GROUP_INFO_PREFERENCES;
+import static bekrina.whereismobile.util.Constants.GROUP_NAME;
+import static bekrina.whereismobile.util.Constants.LAST_NAME;
+import static bekrina.whereismobile.util.Constants.LAT;
+import static bekrina.whereismobile.util.Constants.LNG;
+import static bekrina.whereismobile.util.Constants.LOCATION_FASTEST_INTERVAL;
+import static bekrina.whereismobile.util.Constants.LOCATION_INTERVAL;
+import static bekrina.whereismobile.util.Constants.OFFSET;
+import static bekrina.whereismobile.util.Constants.USER;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener {
-    private static final String TAG = "MapActivity";
+        GoogleApiClient.OnConnectionFailedListener, LocationListener, LocationsUpdatedListener {
+    private static final String TAG = MapActivity.class.getName();
+
     private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 123;
     private static final int USER_IN_GROUP = 1;
     private static final int USER_HAS_NO_GROUP = 0;
-    private static final int GETTING_LOCATION_INTERVAL = 10000;
-    private static final int GETTING_LOCATION_FASTEST_INTERVAL = 5000;
 
     private GoogleMap mGoogleMap;
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
-    private SingletonNetwork mNetwork;
+    private Location mUserLocation;
+    private Marker mUserMarker;
+    // TODO: google sparseArray
+    private Map<Integer, Marker> mMembersMarkers = new HashMap<>();
+
     private MenuItem mLeaveGroupItem;
     private MenuItem mCreateGroupItem;
     private MenuItem mJoinGroupItem;
     private MenuItem mGroupNameItem;
     private MenuItem mInviteToGroupItem;
+
     private Handler mHandler;
+
+    private SingletonNetwork mNetwork;
+
+    private MembersLocationsService mMembersLocationsService;
+    private boolean mMembersLocationsBound;
+    private ServiceConnection mMembersLocationServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MembersLocationsService.MembersLocationsBinder binder = (MembersLocationsService.MembersLocationsBinder) service;
+            mMembersLocationsService = binder.getService(MapActivity.this);
+            mMembersLocationsBound = true;
+            Log.d(TAG, "MembersLocationsService connected");
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mMembersLocationsBound = false;
+            Log.d(TAG, "MembersLocationsService disconnected");
+        }
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -126,8 +170,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         if (mLocationRequest == null) {
             mLocationRequest = LocationRequest.create();
             mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-            mLocationRequest.setInterval(GETTING_LOCATION_INTERVAL);
-            mLocationRequest.setFastestInterval(GETTING_LOCATION_FASTEST_INTERVAL);
+            mLocationRequest.setInterval(LOCATION_INTERVAL);
+            mLocationRequest.setFastestInterval(LOCATION_FASTEST_INTERVAL);
         }
     }
 
@@ -170,11 +214,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    try {
-                        updateUserLocation(LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient));
-                    } catch (SecurityException e) {
-                        Log.e(TAG, "onRequestPermissionsResult:", e);
-                    }
+                        //TODO: test this or change
+                        startLocationUpdates();
                 } else {
                     // TODO: show no permission screen
                 }
@@ -185,21 +226,22 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
     }
 
-    /**
+    //TODO: check this
+/*    *//**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
+     *//*
     public Action getIndexApiAction() {
         Thing object = new Thing.Builder()
-                .setName("Map Page") // TODO: Define a title for the content shown.
-                // TODO: Make sure this auto-generated URL is correct.
+                .setName("Map Page") //  Define a title for the content shown.
+                // Make sure this auto-generated URL is correct.
                 .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
                 .build();
         return new Action.Builder(Action.TYPE_VIEW)
                 .setObject(object)
                 .setActionStatus(Action.STATUS_TYPE_COMPLETED)
                 .build();
-    }
+    }*/
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
@@ -211,17 +253,69 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             return;
         }
         // TODO: see RXJava
-        updateUserLocation(LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient));
+        startLocationUpdates();
     }
 
-    public void updateUserLocation(Location lastLocation) {
-        Marker userLocation = mGoogleMap.addMarker(new MarkerOptions()
-                .title(getString(R.string.user_location_marker))
-                .position(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude())));
-        userLocation.hideInfoWindow();
+    public void updateUserMarker(String desc, Location lastLocation) {
+        if (mMembersMarkers != null) {
+            for (Marker memberMarker : mMembersMarkers.values()) {
+                if (memberMarker.getPosition().latitude == lastLocation.getLatitude() &&
+                        memberMarker.getPosition().longitude == lastLocation.getLongitude()) {
+                    lastLocation.setLatitude(lastLocation.getLatitude() + OFFSET);
+                    lastLocation.setLongitude(lastLocation.getLongitude() + OFFSET);
+                }
+            }
+        }
 
-        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastLocation.getLatitude(),
-                lastLocation.getLongitude()), 10));
+        if (mUserMarker == null) {
+            mUserMarker = mGoogleMap.addMarker(new MarkerOptions()
+                    .title(desc)
+                    .position(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude())));
+        } else {
+            mUserMarker.setPosition(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
+            mUserMarker.setTitle(desc);
+        }
+    }
+
+    public void updateMembersMarkers(List<JSONObject> membersLocations) {
+        try {
+            for (JSONObject location : membersLocations) {
+                Location memberLocation = new Location("MembersLocationsService");
+                memberLocation.setLatitude(location.getDouble(LAT));
+                memberLocation.setLongitude(location.getDouble(LNG));
+                String description = location.getJSONObject(USER).getString(FIRST_NAME) + " "
+                        + location.getJSONObject(USER).getString(LAST_NAME);
+
+                Marker memberMarker = mGoogleMap.addMarker(new MarkerOptions()
+                        .title(description)
+                        .position(new LatLng(memberLocation.getLatitude(), memberLocation.getLongitude())));
+                mMembersMarkers.put(location.getJSONObject("user").getInt("id"), memberMarker);
+            }
+        } catch (JSONException e) {
+            Log.e(TAG, "Problem with getting info about member location:", e);
+        }
+    }
+
+    protected void startLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            LocationServices.FusedLocationApi.requestLocationUpdates(
+                    mGoogleApiClient, mLocationRequest, this);
+        }
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        if (mUserLocation == null) {
+            mUserLocation = location;
+            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),
+                    location.getLongitude()), 10));
+        } else {
+            mUserLocation = location;
+        }
+        updateUserMarker(getString(R.string.user_location_marker), location);
     }
 
     public void processGroupStatus() {
@@ -241,9 +335,16 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
-                            Intent startServiceIntent = new Intent(MapActivity.this.getBaseContext(),
-                                    LocationService.class);
-                            startService(startServiceIntent);
+                            Intent startUserLocationsIntent = new Intent(getBaseContext(),
+                                    LocationSavingService.class);
+                            startService(startUserLocationsIntent);
+                            Intent startMembersLocationsIntent = new Intent(getBaseContext(),
+                                    MembersLocationsService.class);
+                            startService(startMembersLocationsIntent);
+                            startMembersLocationsIntent = new Intent(getBaseContext(),
+                                    MembersLocationsService.class);
+                            bindService(startMembersLocationsIntent,
+                                    mMembersLocationServiceConnection, BIND_AUTO_CREATE);
                         }
                         mHandler.sendMessage(message);
                     }
@@ -292,24 +393,37 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     public void signOut() {
-        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
-                new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(Status status) {
-                        Log.d(TAG, "signOut:onResult:" + status);
-                        // Remove cookies
-                        mNetwork.mCookieManager.getCookieStore().removeAll();
-                        // Remove information about group
-                        SharedPreferences sharedPreferences = getSharedPreferences(GROUP_INFO_PREFERENCES, 0);
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.remove(GROUP_NAME);
-                        editor.remove(GROUP_IDENTITY);
-                        editor.apply();
-                        // Start login activity
-                        Intent loginActivityIntent = new Intent(getBaseContext(), LoginActivity.class);
-                        startActivity(loginActivityIntent);
-                    }
-                });
+        mGoogleApiClient.connect();
+        mGoogleApiClient.registerConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+            @Override
+            public void onConnected(@Nullable Bundle bundle) {
+
+                if (mGoogleApiClient.isConnected()) {
+                    Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
+                            new ResultCallback<Status>() {
+                                @Override
+                                public void onResult(Status status) {
+                                    Log.d(TAG, "signOut:onResult:" + status);
+                                    // Remove cookies
+                                    mNetwork.mCookieManager.getCookieStore().removeAll();
+                                    // Remove information about group
+                                    SharedPreferences sharedPreferences = getSharedPreferences(GROUP_INFO_PREFERENCES, 0);
+                                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                                    editor.remove(GROUP_NAME);
+                                    editor.remove(GROUP_IDENTITY);
+                                    editor.apply();
+                                    // Start login activity
+                                    Intent loginActivityIntent = new Intent(getBaseContext(), LoginActivity.class);
+                                    startActivity(loginActivityIntent);
+                                }
+                            });
+                }
+            }
+            @Override
+            public void onConnectionSuspended(int i) {
+                Log.d(TAG, "Google API Client Connection Suspended");
+            }
+        });
     }
     //TODO: complete this method
     @Override
@@ -337,5 +451,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void onMembersLocationsUpdate(List<JSONObject> locations) {
+        updateMembersMarkers(locations);
     }
 }

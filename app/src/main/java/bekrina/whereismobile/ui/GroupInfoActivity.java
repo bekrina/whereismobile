@@ -10,6 +10,8 @@ import bekrina.whereismobile.R;
 import bekrina.whereismobile.util.Constants;
 
 public class GroupInfoActivity extends AppCompatActivity{
+    private static final String TAG = GroupInfoActivity.class.getName();
+
     private TextView mGroupName;
     private TextView mGroupIdentity;
 
