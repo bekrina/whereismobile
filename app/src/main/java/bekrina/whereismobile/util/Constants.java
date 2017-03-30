@@ -27,4 +27,6 @@ public interface Constants {
     String LEAVE_ACTION = "/leave";
     String SAVE_LOCATION_ACTION = "/savemylocation";
     String GET_LOCATIONS_ACTION = "/getlocations";
+
+    int PERMISSIONS_REQUEST_FINE_LOCATION = 123;
 }
