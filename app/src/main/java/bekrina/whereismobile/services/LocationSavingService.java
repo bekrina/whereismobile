@@ -98,7 +98,6 @@ public class LocationSavingService extends Service implements GoogleApiClient.Co
                 == PackageManager.PERMISSION_GRANTED) {
             LocationServices.FusedLocationApi.requestLocationUpdates(
                     mGoogleApiClient, mLocationRequest, this);
-            return;
         }
     }
 
