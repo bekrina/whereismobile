@@ -1,23 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <TextView
-        android:id="@+id/group_name"
-        android:layout_width="wrap_content"
+        android:id="@+id/group_name_label"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
-        android:gravity="center"
-        android:textSize="36sp"
-        android:textIsSelectable="true"/>
+        android:textSize="20sp"
+        android:text="@string/group_name_label"
+        android:textStyle="bold"
+        android:padding="8dp"
+        />
+
+    <TextView
+        android:id="@+id/group_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:padding="8dp"
+        android:focusable="true"
+        />
+
+    <TextView
+        android:id="@+id/group_identity_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:text="@string/group_identity_label"
+        android:textStyle="bold"
+        android:padding="8dp"
+        />
 
     <TextView
         android:id="@+id/group_identity"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
-        android:gravity="center"
-        android:textSize="36sp"
-        android:textIsSelectable="true"/>
+        android:textSize="20sp"
+        android:padding="8dp"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:textIsSelectable="true"
+        />
+
 </LinearLayout>

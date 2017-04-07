@@ -31,6 +31,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.gson.Gson;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -40,8 +41,11 @@ import java.util.List;
 import java.util.Map;
 
 import bekrina.whereismobile.R;
+import bekrina.whereismobile.listeners.GroupStatusListener;
+import bekrina.whereismobile.listeners.LeaveGroupListener;
 import bekrina.whereismobile.listeners.LocationsUpdatedListener;
-import bekrina.whereismobile.services.ApiService;
+import bekrina.whereismobile.model.Group;
+import bekrina.whereismobile.services.ApiRequestsManager;
 import bekrina.whereismobile.services.LocationSavingService;
 import bekrina.whereismobile.services.MembersLocationsService;
 import bekrina.whereismobile.util.Constants;
@@ -58,16 +62,17 @@ import static bekrina.whereismobile.util.Constants.PERMISSIONS_REQUEST_FINE_LOCA
 import static bekrina.whereismobile.util.Constants.USER;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, LocationListener,
-        LocationsUpdatedListener, ApiService.GroupStatusListener, GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, ApiService.LeaveGroupListener,
-        GoogleApiHelper.SignOutListener{
+        LocationsUpdatedListener, GroupStatusListener, GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener, LeaveGroupListener,
+        GoogleApiHelper.SignOutListener {
+
     private static final String TAG = MapActivity.class.getName();
 
     private GoogleMap mGoogleMap;
 
     private Location mUserLocation;
     private Marker mUserMarker;
-    // TODO: google sparseArray
+
     private Map<Integer, Marker> mMembersMarkers = new HashMap<>();
 
     private MenuItem mLeaveGroupItem;
@@ -76,7 +81,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private MenuItem mGroupNameItem;
     private MenuItem mInviteToGroupItem;
 
-    private ApiService mApiService;
+    private ApiRequestsManager mApiRequestsManager;
     private GoogleApiHelper mGoogleApiHelper;
 
     Intent startUserLocationsIntent = new Intent(this,
@@ -106,7 +111,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         setContentView(R.layout.activity_map);
 
-        mApiService = ApiService.getInstance(this);
+        mApiRequestsManager = ApiRequestsManager.getInstance(this);
         mGoogleApiHelper = new GoogleApiHelper(this);
 
         MapFragment mapFragment = (MapFragment) getFragmentManager()
@@ -133,7 +138,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     protected void onRestart() {
         super.onRestart();
         mGoogleApiHelper.connectToGoogleApi(this, this);
-        mApiService.processGroupStatus(this);
+        mApiRequestsManager.processGroupStatus(this);
     }
 
     @Override
@@ -194,22 +199,18 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
     }
 
-    public void updateMembersMarkers(List<JSONObject> membersLocations) {
-        try {
-            for (JSONObject location : membersLocations) {
-                Location memberLocation = new Location("MembersLocationsService");
-                memberLocation.setLatitude(location.getDouble(LAT));
-                memberLocation.setLongitude(location.getDouble(LNG));
-                String description = location.getJSONObject(USER).getString(FIRST_NAME) + " "
-                        + location.getJSONObject(USER).getString(LAST_NAME);
+    public void updateMembersMarkers(List<bekrina.whereismobile.model.Location> membersLocations) {
+        for (bekrina.whereismobile.model.Location location : membersLocations) {
+            Location memberLocation = new Location("MembersLocationsService");
+            memberLocation.setLatitude(location.getLatitude());
+            memberLocation.setLongitude(location.getLongitude());
+            String description = location.getUser().getFirstName() + " "
+                    + location.getUser().getLastName();
 
-                Marker memberMarker = mGoogleMap.addMarker(new MarkerOptions()
-                        .title(description)
-                        .position(new LatLng(memberLocation.getLatitude(), memberLocation.getLongitude())));
-                mMembersMarkers.put(location.getJSONObject("user").getInt("id"), memberMarker);
-            }
-        } catch (JSONException e) {
-            Log.e(TAG, "Problem with getting info about member location:", e);
+            Marker memberMarker = mGoogleMap.addMarker(new MarkerOptions()
+                    .title(description)
+                    .position(new LatLng(memberLocation.getLatitude(), memberLocation.getLongitude())));
+            mMembersMarkers.put(location.getUser().getId(), memberMarker);
         }
     }
 
@@ -246,14 +247,15 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        mApiService.processGroupStatus(this);
+        mApiRequestsManager.processGroupStatus(this);
 
-        String groupName = getSharedPreferences(Constants.GROUP_INFO_PREFERENCES, 0)
-                .getString(Constants.GROUP_NAME, "");
-        if (groupName.equals("")) {
+        Gson gson = new Gson();
+        Group group = gson.fromJson(getSharedPreferences(Constants.GROUP_INFO_PREFERENCES, 0)
+                .getString(Constants.GROUP, ""), Group.class);
+        if (group == null) {
             mGroupNameItem.setTitle(getString(R.string.no_group_menu_item));
         } else {
-            mGroupNameItem.setTitle(groupName);
+            mGroupNameItem.setTitle(group.getName());
         }
         return true;
     }
@@ -281,7 +283,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 startActivity(joinIntent);
                 return true;
             case R.id.leave_group_menu_item:
-                mApiService.leaveGroup(this);
+                mApiRequestsManager.leaveGroup(this);
                 return true;
             case R.id.sign_out_menu_item:
                 mGoogleApiHelper.signOut(this);
@@ -303,19 +305,18 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     @Override
-    public void onMembersLocationsUpdate(List<JSONObject> locations) {
+    public void onMembersLocationsUpdate(List<bekrina.whereismobile.model.Location> locations) {
         updateMembersMarkers(locations);
     }
 
     @Override
-    public void onUserHasGroup(String name, String identity) {
+    public void onUserHasGroup(Group group) {
         mCreateGroupItem.setVisible(false);
         mJoinGroupItem.setVisible(false);
         mLeaveGroupItem.setVisible(true);
         mInviteToGroupItem.setVisible(true);
 
-        mGroupNameItem.setTitle(getSharedPreferences(Constants.GROUP_INFO_PREFERENCES, 0)
-                .getString(Constants.GROUP_NAME, ""));
+        mGroupNameItem.setTitle(group.getName());
 
         startService(startUserLocationsIntent);
         Intent startMembersLocationsIntent = new Intent(this,
@@ -359,7 +360,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mGoogleMap.addMarker(new MarkerOptions()
                 .position(mUserMarker.getPosition())
                 .title(mUserMarker.getTitle()));
-        mApiService.processGroupStatus(this);
+        mApiRequestsManager.processGroupStatus(this);
     }
 
     @Override

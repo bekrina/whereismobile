@@ -2,38 +2,23 @@ package bekrina.whereismobile.ui;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.android.volley.NetworkResponse;
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.ServerError;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.HttpHeaderParser;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.google.api.client.http.HttpStatusCodes;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import bekrina.whereismobile.R;
-import bekrina.whereismobile.services.ApiService;
-import bekrina.whereismobile.util.SingletonNetwork;
+import bekrina.whereismobile.listeners.InviteStatusListener;
+import bekrina.whereismobile.services.ApiRequestsManager;
+import bekrina.whereismobile.util.Validation;
 
-import static bekrina.whereismobile.util.Constants.*;
-
-public class InviteToGroupActivity extends AppCompatActivity implements ApiService.InviteStatusListener {
+public class InviteToGroupActivity extends AppCompatActivity implements InviteStatusListener {
     public static final String TAG = InviteToGroupActivity.class.getName();
 
     private EditText mInvitationEmail;
-    private ApiService mApiService;
+    private ApiRequestsManager mApiRequestsManager;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -42,13 +27,18 @@ public class InviteToGroupActivity extends AppCompatActivity implements ApiServi
         setContentView(R.layout.activity_invite_to_group);
 
         mInvitationEmail = (EditText) findViewById(R.id.invitation_email_field);
-        mApiService = ApiService.getInstance(this);
+        mApiRequestsManager = ApiRequestsManager.getInstance(this);
 
         final Button submit = (Button) findViewById(R.id.submit_invite);
         submit.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                mApiService.inviteToGroup(InviteToGroupActivity.this,
-                        mInvitationEmail.getText().toString(), InviteToGroupActivity.this);
+                if (Validation.isValidEmail(mInvitationEmail.getText())) {
+                    mInvitationEmail.setError(null);
+                    mApiRequestsManager.inviteToGroup(InviteToGroupActivity.this,
+                            mInvitationEmail.getText().toString(), InviteToGroupActivity.this);
+                } else {
+                    mInvitationEmail.setError("Email is not valid");
+                }
             }
         });
     }

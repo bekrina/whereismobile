@@ -2,6 +2,7 @@ package bekrina.whereismobile.util;
 
 public interface Constants {
     String GROUP_INFO_PREFERENCES = "groupInfo";
+    String GROUP = "group";
     String GROUP_NAME = "groupName";
     String GROUP_IDENTITY = "groupIdentity";
     String NAME = "name";

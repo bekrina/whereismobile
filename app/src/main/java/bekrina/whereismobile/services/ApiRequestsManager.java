@@ -2,7 +2,10 @@ package bekrina.whereismobile.services;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 
 import com.android.volley.NetworkResponse;
@@ -15,53 +18,55 @@ import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.google.api.client.http.HttpStatusCodes;
+import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import bekrina.whereismobile.R;
+import bekrina.whereismobile.listeners.CreateGroupListener;
+import bekrina.whereismobile.listeners.GroupStatusListener;
+import bekrina.whereismobile.listeners.InviteStatusListener;
+import bekrina.whereismobile.listeners.JoinedToGroupListener;
+import bekrina.whereismobile.listeners.LeaveGroupListener;
+import bekrina.whereismobile.model.Group;
+import bekrina.whereismobile.model.Invite;
+import bekrina.whereismobile.ui.InviteToGroupActivity;
+import bekrina.whereismobile.ui.MapActivity;
 import bekrina.whereismobile.util.Constants;
 import bekrina.whereismobile.util.SingletonNetwork;
 
-import static bekrina.whereismobile.util.Constants.EMAIL;
 import static bekrina.whereismobile.util.Constants.GET_GROUPS_ACTION;
+import static bekrina.whereismobile.util.Constants.GROUP;
 import static bekrina.whereismobile.util.Constants.GROUP_ENDPOINT;
-import static bekrina.whereismobile.util.Constants.GROUP_IDENTITY;
 import static bekrina.whereismobile.util.Constants.GROUP_INFO_PREFERENCES;
 import static bekrina.whereismobile.util.Constants.INVITE_ACTION;
 import static bekrina.whereismobile.util.Constants.JOIN_ACTION;
 import static bekrina.whereismobile.util.Constants.LEAVE_ACTION;
 
-// TODO: is this name appropriate?
-public class ApiService {
-    private static ApiService mInstance;
+public class ApiRequestsManager {
+    private static ApiRequestsManager mInstance;
     private SingletonNetwork mNetwork;
     private Context mContext;
 
-    private static final String TAG = ApiService.class.getName();
+    private static final String TAG = ApiRequestsManager.class.getName();
 
-    private ApiService(Context context) {
+    private ApiRequestsManager(Context context) {
         mNetwork = SingletonNetwork.getInstance(context);
         mContext = context;
     }
 
-    public static synchronized ApiService getInstance(Context context) {
+    public static synchronized ApiRequestsManager getInstance(Context context) {
         if (mInstance == null) {
-            mInstance = new ApiService(context);
+            mInstance = new ApiRequestsManager(context);
             return mInstance;
         }
         return mInstance;
     }
 
-    public interface JoinedToGroupListener {
-        void onJoined();
-        void onJoinFailed(int statusCode);
-    }
-    public void joinGroup(final Activity activity, String groupIdentity,
+    public void joinGroup(String groupIdentity,
                           final JoinedToGroupListener listener) {
-        //TODO: check if user entered identity
-        //TODO: display group name and change shared prefs for current group
-        SharedPreferences preferences = activity.getSharedPreferences(GROUP_INFO_PREFERENCES, 0);
         StringRequest joinRequest = new StringRequest(Request.Method.POST,
                 GROUP_ENDPOINT + "/" + groupIdentity
                         + JOIN_ACTION, new Response.Listener<String>() {
@@ -90,11 +95,6 @@ public class ApiService {
         mNetwork.getRequestQueue().add(joinRequest);
     }
 
-    public interface GroupStatusListener {
-        void onUserHasGroup(String name, String identity);
-        void onUserWithoutGroup();
-    }
-
     public void processGroupStatus(final GroupStatusListener listener) {
         JsonArrayRequest groupRequest = new JsonArrayRequest(Request.Method.GET,
                 GROUP_ENDPOINT + GET_GROUPS_ACTION, null,
@@ -104,50 +104,43 @@ public class ApiService {
                         if (response.optJSONObject(0) == null) {
                             listener.onUserWithoutGroup();
                         } else {
-                            try {
-                                String name = response.getJSONObject(0).getString(Constants.NAME);
-                                String identity = response.getJSONObject(0).getString(Constants.IDENTITY);
-                                updateGroupInfoPreferences(name, identity);
-                                listener.onUserHasGroup(name, identity);
-                            } catch (JSONException e) {
-                                Log.e(TAG, "getGroupStatus:", e);
-                                listener.onUserWithoutGroup();
-                            }
+                            Gson gson = new Gson();
+                            Group group = gson.fromJson(response.optJSONObject(0).toString(), Group.class);
+                            updateGroupInfoPreferences(response.optJSONObject(0).toString());
+                            listener.onUserHasGroup(group);
                         }
                     }
                 }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e(TAG, "tokenRequest.onErrorResponse:", error);
-            }
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e(TAG, "tokenRequest.onErrorResponse:", error);
+                        listener.onUserWithoutGroup();
+                }
         }) {
         };
         mNetwork.getRequestQueue().add(groupRequest);
     }
 
-    private void updateGroupInfoPreferences(String name, String identity) {
+    private void updateGroupInfoPreferences(String jsonGroup) {
         SharedPreferences preferences = mContext.getSharedPreferences(Constants.GROUP_INFO_PREFERENCES, 0);
         SharedPreferences.Editor editor = preferences.edit();
-        editor.putString(Constants.GROUP_NAME, name);
-        editor.putString(Constants.GROUP_IDENTITY, identity);
+        editor.putString(GROUP, jsonGroup);
         editor.apply();
-    }
-
-    public interface InviteStatusListener {
-        void onInviteSent();
-        void onInviteFailed(int statusCode);
     }
 
     public void inviteToGroup(Activity activity, String emailToInvite,
                               final InviteStatusListener listener) {
-        JSONObject invite = new JSONObject();
+        Invite invite = new Invite();
         try {
-            invite.put(EMAIL, emailToInvite);
+            invite.setEmail(emailToInvite);
             SharedPreferences preferences = activity.getSharedPreferences(GROUP_INFO_PREFERENCES, 0);
-            JsonObjectRequest createGroup = new JsonObjectRequest(Request.Method.POST,
-                    GROUP_ENDPOINT + "/" + preferences.getString(GROUP_IDENTITY, "")
+            Gson gson = new Gson();
+            //TODO: http://stackoverflow.com/questions/9593409/how-to-convert-pojo-to-json-and-vice-versa
+            String groupIdentity = gson.fromJson(preferences.getString(GROUP, ""), Group.class).getIdentity();
+            JsonObjectRequest inviteToGroup = new JsonObjectRequest(Request.Method.POST,
+                    GROUP_ENDPOINT + "/" + groupIdentity
                             + INVITE_ACTION,
-                    invite, new Response.Listener<JSONObject>() {
+                    new JSONObject(gson.toJson(invite, Invite.class)), new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject response) {
                     listener.onInviteSent();
@@ -170,32 +163,23 @@ public class ApiService {
                     }
                 }
             };
-            mNetwork.getRequestQueue().add(createGroup);
+            mNetwork.getRequestQueue().add(inviteToGroup);
         } catch (JSONException e) {
             Log.e(TAG, "Error during sending of invite:", e);
         }
     }
 
-    public interface CreateGroupListener {
-        void onGroupCreated();
-        void onGroupCreationFailed();
-    }
-
     public void createGroup(String groupName, final CreateGroupListener listener) {
-        JSONObject group = new JSONObject();
         try {
-            group.put(Constants.NAME, groupName);
+            final Gson gson = new Gson();
+            Group newGroup = new Group(groupName);
             JsonObjectRequest createGroup = new JsonObjectRequest(Request.Method.PUT,
-                    GROUP_ENDPOINT, group, new Response.Listener<JSONObject>() {
+                    GROUP_ENDPOINT, new JSONObject(gson.toJson(newGroup)),
+                    new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject group) {
-                    try {
-                        updateGroupInfoPreferences(group.getString(Constants.NAME),
-                                group.getString(Constants.IDENTITY));
+                        updateGroupInfoPreferences(group.toString());
                         listener.onGroupCreated();
-                    } catch (JSONException e) {
-                        Log.e(TAG, "During new group sending:", e);
-                    }
                 }
             }, new Response.ErrorListener() {
                 @Override
@@ -208,32 +192,31 @@ public class ApiService {
             mNetwork.getRequestQueue().add(createGroup);
         } catch (JSONException e) {
             Log.e(TAG, "Error during JSONObject creation", e);
-            //TODO: show popup about error during group creation
+            listener.onGroupCreationFailed();
         }
     }
 
-    public interface LeaveGroupListener {
-        void onLeaveGroup();
-        void onLeaveGroupFailed();
-    }
-
     public void leaveGroup(final LeaveGroupListener listener) {
-        String currentGroupIdentity = mContext.getSharedPreferences(GROUP_INFO_PREFERENCES, 0)
-                .getString(GROUP_IDENTITY, "");
-        StringRequest requestToLeave = new StringRequest(Request.Method.DELETE,
-                GROUP_ENDPOINT + "/" + currentGroupIdentity + LEAVE_ACTION,
-                new Response.Listener<String>() {
+        Gson gson = new Gson();
+        Group group = gson.fromJson(mContext.getSharedPreferences(GROUP_INFO_PREFERENCES, 0).getString(GROUP, ""), Group.class);
+        if (group != null) {
+            StringRequest requestToLeave = new StringRequest(Request.Method.DELETE,
+                    GROUP_ENDPOINT + "/" + group.getIdentity() + LEAVE_ACTION,
+                    new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            updateGroupInfoPreferences("");
+                            listener.onLeaveGroup();
+                        }
+                    }, new Response.ErrorListener() {
                 @Override
-                    public void onResponse(String response) {
-                        updateGroupInfoPreferences("", "");
-                        listener.onLeaveGroup();
-                    }
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        listener.onLeaveGroupFailed();
-                    }
-                });
-        mNetwork.addToRequestQueue(requestToLeave);
+                public void onErrorResponse(VolleyError error) {
+                    listener.onLeaveGroupFailed();
+                }
+            });
+            mNetwork.addToRequestQueue(requestToLeave);
+        } else {
+            listener.onLeaveGroupFailed();
+        }
     }
 }

@@ -28,11 +28,15 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.api.client.http.HttpStatusCodes;
+import com.google.gson.Gson;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.sql.Timestamp;
+
 import bekrina.whereismobile.exceptions.PermissionRequiredException;
+import bekrina.whereismobile.model.Group;
 import bekrina.whereismobile.util.SingletonNetwork;
 
 import static bekrina.whereismobile.util.Constants.*;
@@ -134,40 +138,44 @@ public class LocationSavingService extends Service implements GoogleApiClient.Co
 
     @Override
     public void onLocationChanged(Location location) {
-        JSONObject locationObject = new JSONObject();
+        bekrina.whereismobile.model.Location myLocation =
+                new bekrina.whereismobile.model.Location(location.getLatitude(),
+                                                        location.getLongitude());
+        Gson gson = new Gson();
         try {
-            locationObject.put(LAT, location.getLatitude());
-            locationObject.put(LNG, location.getLongitude());
-
+            JSONObject locationJsonObject = new JSONObject(gson.toJson(myLocation));
             SharedPreferences preferences = getSharedPreferences(GROUP_INFO_PREFERENCES, 0);
+            Group group = gson.fromJson(preferences.getString(GROUP, ""), Group.class);
 
-            JsonObjectRequest sendLocation = new JsonObjectRequest(Request.Method.PUT,
-                    GROUP_ENDPOINT + "/" + preferences.getString(GROUP_IDENTITY, "")
-                            + SAVE_LOCATION_ACTION,
-                    locationObject, new Response.Listener<JSONObject>() {
-                @Override
-                public void onResponse(JSONObject response) {
-                    Log.d(TAG, "Success! Location saved");
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                        Log.e(TAG, "Location not saved:", error);
-                }
-            }) {
-                @Override
-                protected Response<JSONObject> parseNetworkResponse(NetworkResponse response) {
-                    if (response.statusCode == HttpStatusCodes.STATUS_CODE_OK) {
-                        return Response.success(new JSONObject(),
-                                HttpHeaderParser.parseCacheHeaders(response));
-                    } else {
-                        return Response.error(new ServerError());
+            if (group != null) {
+                JsonObjectRequest sendLocation = new JsonObjectRequest(Request.Method.PUT,
+                        GROUP_ENDPOINT + "/" + group.getIdentity()
+                                + SAVE_LOCATION_ACTION,
+                        locationJsonObject, new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Log.d(TAG, "Success! Location saved");
                     }
-                }
-            };
-            mSingletonNetwork.getRequestQueue().add(sendLocation);
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e(TAG, "Location not saved:", error);
+                    }
+                }) {
+                    @Override
+                    protected Response<JSONObject> parseNetworkResponse(NetworkResponse response) {
+                        if (response.statusCode == HttpStatusCodes.STATUS_CODE_OK) {
+                            return Response.success(new JSONObject(),
+                                    HttpHeaderParser.parseCacheHeaders(response));
+                        } else {
+                            return Response.error(new ServerError());
+                        }
+                    }
+                };
+                mSingletonNetwork.getRequestQueue().add(sendLocation);
+            }
         } catch (JSONException e) {
-            Log.e(TAG, "Error during sending location:", e);
+            e.printStackTrace();
         }
     }
 }

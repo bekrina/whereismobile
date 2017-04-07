@@ -43,11 +43,14 @@
     <string name="error_during_login">Sorry, an error occurred. Please try again!</string>
     <string name="login_failed">Failed to sign in</string>
     <string name="login_successfull">You are logged in!</string>
+    <string name="sign_in_button">Sign in with Google</string>
 
     <!-- For Create Group activity-->
     <string name="lets_create_new_group">Let\'s create a new group!</string>
-    <string name="group_name_field">Enter group name</string>
+    <string name="group_name_field">Group name</string>
     <string name="submit">Submit</string>
+    <string name="group_not_created_dialog_message">Error while creating group</string>
+    <string name="group_not_created_dialog_title">Group was not created.</string>
 
     <!-- For Map activity -->
     <string name="user_location_marker">You are here</string>
@@ -61,18 +64,22 @@
     <string name="sign_out_menu_item">Sign out</string>
 
     <!-- For Invite To Group activity -->
-    <string name="lets_invite_someone">Enter email of person who you want to invite</string>
-    <string name="invitation_email_field">Enter email here</string>
-    <string name="invite_sent_dialog_message">Hooray!</string>
+    <string name="lets_invite_someone">Invite to group</string>
+    <string name="invitation_email_field">Email</string>
+    <string name="invite_sent_dialog_message">Success!</string>
     <string name="invite_sent_dialog_title">Invite was sent!</string>
     <string name="invite_already_exists_dialog_message">User already invited to this group</string>
     <string name="invite_already_exists_dialog_title">Invite exists</string>
 
     <!-- For Join Group activity -->
     <string name="lets_join_a_group">Enter group identity token to join</string>
-    <string name="group_identity_field">Enter group identity here</string>
+    <string name="group_identity_field">Group identity</string>
     <string name="joined_dialog_message">Let\'s go to map</string>
     <string name="joined_dialog_title">You joined a new group!</string>
     <string name="no_invite_for_user_dialog_message">Invite is required for joining</string>
     <string name="no_invite_for_user_dialog_title">Sorry, you have no invite to this group</string>
+
+     <!-- For Group Info activity -->
+    <string name="group_name_label">Group name:</string>
+    <string name="group_identity_label">Identity:</string>
 </resources>
