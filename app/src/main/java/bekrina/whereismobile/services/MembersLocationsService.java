@@ -116,7 +116,7 @@ public class MembersLocationsService extends Service {
                             });
                             Gson gson = builder.create();
 
-                            for (int i = 0; i < response.length() - 1; i++) {
+                            for (int i = 0; i < response.length(); i++) {
                                 JSONObject jsonObjectLocation = response.getJSONObject(i);
                                 Location location = gson.fromJson(jsonObjectLocation.toString(),
                                         Location.class);

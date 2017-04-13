@@ -11,14 +11,14 @@ import android.widget.EditText;
 
 import bekrina.whereismobile.R;
 import bekrina.whereismobile.listeners.InviteStatusListener;
-import bekrina.whereismobile.services.ApiRequestsManager;
+import bekrina.whereismobile.services.RestManager;
 import bekrina.whereismobile.util.Validation;
 
 public class InviteToGroupActivity extends AppCompatActivity implements InviteStatusListener {
     public static final String TAG = InviteToGroupActivity.class.getName();
 
     private EditText mInvitationEmail;
-    private ApiRequestsManager mApiRequestsManager;
+    private RestManager mRestManager;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -27,14 +27,14 @@ public class InviteToGroupActivity extends AppCompatActivity implements InviteSt
         setContentView(R.layout.activity_invite_to_group);
 
         mInvitationEmail = (EditText) findViewById(R.id.invitation_email_field);
-        mApiRequestsManager = ApiRequestsManager.getInstance(this);
+        mRestManager = RestManager.getInstance(this);
 
         final Button submit = (Button) findViewById(R.id.submit_invite);
         submit.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if (Validation.isValidEmail(mInvitationEmail.getText())) {
                     mInvitationEmail.setError(null);
-                    mApiRequestsManager.inviteToGroup(InviteToGroupActivity.this,
+                    mRestManager.inviteToGroup(InviteToGroupActivity.this,
                             mInvitationEmail.getText().toString(), InviteToGroupActivity.this);
                 } else {
                     mInvitationEmail.setError("Email is not valid");
