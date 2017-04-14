@@ -36,6 +36,8 @@ public class GoogleApiHelper {
                     .addApi(LocationServices.API)
                     .addApi(Auth.GOOGLE_SIGN_IN_API)
                     .addApi(AppIndex.API).build();
+        }
+        if (!mGoogleApiClient.isConnected()) {
             mGoogleApiClient.connect();
         }
     }

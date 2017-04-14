@@ -2,7 +2,9 @@ package bekrina.whereismobile.ui;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
@@ -29,27 +31,34 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
+import com.google.maps.android.clustering.Cluster;
+import com.google.maps.android.clustering.ClusterItem;
+import com.google.maps.android.clustering.ClusterManager;
+import com.google.maps.android.clustering.algo.Algorithm;
+import com.google.maps.android.clustering.algo.NonHierarchicalDistanceBasedAlgorithm;
+import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.google.maps.android.ui.IconGenerator;
 
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import bekrina.whereismobile.R;
 import bekrina.whereismobile.listeners.GroupStatusListener;
 import bekrina.whereismobile.listeners.LeaveGroupListener;
 import bekrina.whereismobile.listeners.LocationsUpdatedListener;
 import bekrina.whereismobile.model.Group;
+import bekrina.whereismobile.model.User;
+import bekrina.whereismobile.services.RestManager;
 import bekrina.whereismobile.services.LocationSavingService;
 import bekrina.whereismobile.services.MembersLocationsService;
-import bekrina.whereismobile.services.RestManager;
 import bekrina.whereismobile.util.Constants;
 import bekrina.whereismobile.util.GoogleApiHelper;
 
@@ -65,19 +74,20 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     private static final String TAG = MapActivity.class.getName();
 
-    private GoogleMap mGoogleMap;
-
-    private Marker mUserMarker;
-    private Map<Integer, Marker> mMembersMarkers = new HashMap<>();
-
     private MenuItem mLeaveGroupItem;
     private MenuItem mCreateGroupItem;
     private MenuItem mJoinGroupItem;
     private MenuItem mGroupNameItem;
     private MenuItem mInviteToGroupItem;
 
-    private RestManager mApiRequestsManager;
+    private RestManager mRestManager;
     private GoogleApiHelper mGoogleApiHelper;
+
+    private GoogleMap mGoogleMap;
+    private ClusterManager<MyClusterItem> mClusterManager;
+    private Algorithm<MyClusterItem> mClusterAlgorithm;
+
+    private Location mUserLocation;
 
     private MembersLocationsService mMembersLocationsService;
     private boolean mMembersLocationsBound;
@@ -100,37 +110,58 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "onCreate");
 
         setContentView(R.layout.activity_map);
 
-        mApiRequestsManager = RestManager.getInstance(this);
+        mRestManager = RestManager.getInstance(this);
         mGoogleApiHelper = new GoogleApiHelper(this);
 
         MapFragment mapFragment = (MapFragment) getFragmentManager()
                 .findFragmentById(R.id.map);
+
+        //ProgressDialog.show(this, "Loading", "Loading the map...");
         //TODO: включить анимацию загрузки
         mapFragment.getMapAsync(this);
-
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-
+        Log.d(TAG, "onStart");
         mGoogleApiHelper.connectToGoogleApi(this, this);
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
-        mGoogleApiHelper.disconnectFromGoogleApi();
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume");
     }
 
     @Override
     protected void onRestart() {
         super.onRestart();
-        mGoogleApiHelper.connectToGoogleApi(this, this);
-        mApiRequestsManager.processGroupStatus(this);
+        Log.d(TAG, "onRestart");
+        mRestManager.processGroupStatus(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.d(TAG, "onStop");
+        mGoogleApiHelper.disconnectFromGoogleApi();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy");
     }
 
     @Override
@@ -147,6 +178,12 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     PERMISSIONS_REQUEST_FINE_LOCATION);
         }
+        mClusterManager = new ClusterManager<>(this, mGoogleMap);
+        mGoogleMap.setOnCameraChangeListener(mClusterManager);
+        final CustomClusterRenderer renderer = new CustomClusterRenderer(this, mGoogleMap, mClusterManager);
+        mClusterAlgorithm = new NonHierarchicalDistanceBasedAlgorithm<>();
+        mClusterManager.setAlgorithm(mClusterAlgorithm);
+        mClusterManager.setRenderer(renderer);
         // TODO: выключить анимацию загрузки
     }
 
@@ -171,54 +208,70 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     public void updateUserMarker(Location lastLocation) {
-        if (mMembersMarkers != null) {
-            for (Marker memberMarker : mMembersMarkers.values()) {
-                if (memberMarker.getPosition().latitude == lastLocation.getLatitude() &&
-                        memberMarker.getPosition().longitude == lastLocation.getLongitude()) {
-                    lastLocation.setLatitude(lastLocation.getLatitude() + OFFSET);
-                    lastLocation.setLongitude(lastLocation.getLongitude() + OFFSET);
-                }
-            }
-        }
+        mUserLocation = lastLocation;
 
-        String desc = getString(R.string.user_location_marker);
-        IconGenerator generator = new IconGenerator(this);
-        generator.setStyle(IconGenerator.STYLE_ORANGE);
-        //generator.setColor(R.color.accent_orange);
-        Bitmap icon = generator.makeIcon(desc);
-
-        if (mUserMarker == null) {
-            mUserMarker = mGoogleMap.addMarker(new MarkerOptions()
-                    .title(desc)
-                    .position(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude())));
-            mUserMarker.setIcon(BitmapDescriptorFactory.fromBitmap(icon));
+        //TODO: discuss: как правильно хранить данные? Может лучше создавать объект с текущей группой при старте приложения и хранить его в памяти?
+        // в таком случае правильно ли хранить это в поле активити? или нужен отдельный класс-хендлер?
+        //TODO: change this ASAP, all was hardcoded for testing. Need to use Model for current user.
+/*        mUserLocation = new bekrina.whereismobile.model.Location(lastLocation.getLatitude(),
+                lastLocation.getLongitude(), new Timestamp(System.currentTimeMillis()),
+                new User("me", "me", "me", new Group("test", "test")));*/
+        MyClusterItem clusterItem = new MyClusterItem(9999999, getString(R.string.user_location_marker),
+                new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()),
+                new Date(System.currentTimeMillis()));
+        if (mClusterAlgorithm.getItems().isEmpty() || !mClusterAlgorithm.getItems().contains(clusterItem)) {
+            mClusterManager.addItem(clusterItem);
 
             mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastLocation.getLatitude(),
                     lastLocation.getLongitude()), 10));
-
         } else {
-            mUserMarker.setPosition(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
-            mUserMarker.setTitle(desc);
+            mClusterAlgorithm.getItems().remove(clusterItem);
+            //mClusterManager.clearItems();
+            //mClusterManager.setAlgorithm(mClusterAlgorithm);
+            mClusterManager.addItem(clusterItem);
         }
+        mClusterManager.cluster();
+
+        /*IconGenerator generator = new IconGenerator(this);
+        generator.setStyle(IconGenerator.STYLE_ORANGE);
+        //generator.setColor(R.color.accent_orange);
+        Bitmap icon = generator.makeIcon(desc);*/
     }
 
     public void updateMembersMarkers(List<bekrina.whereismobile.model.Location> membersLocations) {
         IconGenerator generator = new IconGenerator(this);
         generator.setStyle(IconGenerator.STYLE_BLUE);
         for (bekrina.whereismobile.model.Location location : membersLocations) {
-            Location memberLocation = new Location("MembersLocationsService");
-            memberLocation.setLatitude(location.getLatitude());
-            memberLocation.setLongitude(location.getLongitude());
 
             Date locationTime = new Date(location.getTimestamp().getTime());
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-            String locationTimeFormatted = formatter.format(locationTime);
-            Marker memberMarker = mGoogleMap.addMarker(new MarkerOptions()
+/*            SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+            String locationTimeFormatted = formatter.format(locationTime);*/
+
+            MyClusterItem memberClusterItem = new MyClusterItem(location.getUser().getId(), location.getUser().getFirstName()
+                    , new LatLng(location.getLatitude(), location.getLongitude()), locationTime);
+            if (mClusterAlgorithm.getItems().isEmpty() || !mClusterAlgorithm.getItems().contains(memberClusterItem)) {
+                mClusterManager.addItem(memberClusterItem);
+                mClusterManager.addItem(memberClusterItem);
+                mClusterManager.addItem(memberClusterItem);
+            } else {
+                mClusterAlgorithm.getItems().remove(memberClusterItem);
+                //mClusterManager.clearItems();
+                //mClusterManager.setAlgorithm(mClusterAlgorithm);
+                mClusterManager.addItem(memberClusterItem);
+                mClusterManager.addItem(memberClusterItem);
+                mClusterManager.addItem(memberClusterItem);
+                mClusterManager.addItem(memberClusterItem);
+            }
+
+
+            /*Marker memberMarker = mGoogleMap.addMarker(new MarkerOptions()
                     .icon(BitmapDescriptorFactory.fromBitmap(generator.makeIcon(location.getUser().getFirstName())))
                     .title(locationTimeFormatted)
-                    .position(new LatLng(memberLocation.getLatitude(), memberLocation.getLongitude())));
-            mMembersMarkers.put(location.getUser().getId(), memberMarker);
+                    .position(new LatLng(location.getLatitude(), location.getLongitude())));
+            mMembersMarkers.put(location.getUser().getId(), memberMarker);*/
         }
+
+        mClusterManager.cluster();
     }
 
     protected void startLocationUpdates() {
@@ -254,7 +307,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        mApiRequestsManager.processGroupStatus(this);
+        mRestManager.processGroupStatus(this);
 
         Gson gson = new Gson();
         Group group = gson.fromJson(getSharedPreferences(Constants.GROUP_INFO_PREFERENCES, 0)
@@ -290,7 +343,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 startActivity(joinIntent);
                 return true;
             case R.id.leave_group_menu_item:
-                mApiRequestsManager.leaveGroup(this);
+                mRestManager.leaveGroup(this);
                 return true;
             case R.id.sign_out_menu_item:
                 mGoogleApiHelper.signOut(this);
@@ -360,11 +413,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     @Override
     public void onLeaveGroup() {
         mGoogleMap.clear();
-        mMembersMarkers.clear();
-        mGoogleMap.addMarker(new MarkerOptions()
-                .position(mUserMarker.getPosition())
-                .title(mUserMarker.getTitle()));
-        mApiRequestsManager.processGroupStatus(this);
+        mClusterManager.clearItems();
+        updateUserMarker(mUserLocation);
+        mRestManager.processGroupStatus(this);
     }
 
     @Override
@@ -439,17 +490,73 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
     }
 
-}
+}*/
 
-class MyItem implements ClusterItem {
-    private final LatLng mPosition;
+class MyClusterItem implements ClusterItem {
+    private final int userId;
+    private final String title;
+    private final LatLng latLng;
+    private final Date date;
 
-    public MyItem(double lat, double lng) {
-        mPosition = new LatLng(lat, lng);
+    public MyClusterItem(int userId, String title, LatLng latLng, Date date) {
+        this.userId = userId;
+        this.title = title;
+        this.latLng = latLng;
+        this.date = date;
     }
 
     @Override
     public LatLng getPosition() {
-        return mPosition;
+        return latLng;
     }
-}*/
+
+    public String getTitle() {
+        return title;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (!(object instanceof MyClusterItem)) {
+            return  false;
+        }
+        MyClusterItem item = (MyClusterItem) object;
+        if (item.getTitle().equals(title) && item.getUserId() == userId) {
+            return true;
+        }
+        return false;
+    }
+
+}
+
+class CustomClusterRenderer extends DefaultClusterRenderer<MyClusterItem> {
+    private final Context mContext;
+    public CustomClusterRenderer(Context context, GoogleMap map,
+                                 ClusterManager<MyClusterItem> clusterManager) {
+        super(context, map, clusterManager);
+        mContext = context;
+    }
+
+    @Override
+    protected void onBeforeClusterItemRendered(MyClusterItem item,
+                                               MarkerOptions markerOptions) {
+        final BitmapDescriptor markerDescriptor = BitmapDescriptorFactory.defaultMarker(
+                BitmapDescriptorFactory.HUE_ORANGE);
+        markerOptions.icon(markerDescriptor).snippet(item.getTitle());
+    }
+
+/*    @Override
+     protected void onBeforeClusterRendered(Cluster<MyClusterItem> cluster,
+                                            MarkerOptions markerOptions) {
+        final BitmapDescriptor markerDescriptor = BitmapDescriptorFactory.defaultMarker(
+                BitmapDescriptorFactory.HUE_AZURE);
+         markerOptions.icon(markerDescriptor).snippet("test");
+     }*/
+}
