@@ -48,7 +48,9 @@ import com.google.maps.android.ui.IconGenerator;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import bekrina.whereismobile.R;
 import bekrina.whereismobile.listeners.GroupStatusListener;
@@ -74,6 +76,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     private static final String TAG = MapActivity.class.getName();
 
+    private Marker mUserMarker;
+    private Map<Integer, Marker> mMembersMarkers = new HashMap<>();
+
     private MenuItem mLeaveGroupItem;
     private MenuItem mCreateGroupItem;
     private MenuItem mJoinGroupItem;
@@ -84,8 +89,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private GoogleApiHelper mGoogleApiHelper;
 
     private GoogleMap mGoogleMap;
-    private ClusterManager<MyClusterItem> mClusterManager;
-    private Algorithm<MyClusterItem> mClusterAlgorithm;
 
     private Location mUserLocation;
 
@@ -178,12 +181,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     PERMISSIONS_REQUEST_FINE_LOCATION);
         }
-        mClusterManager = new ClusterManager<>(this, mGoogleMap);
-        mGoogleMap.setOnCameraChangeListener(mClusterManager);
-        final CustomClusterRenderer renderer = new CustomClusterRenderer(this, mGoogleMap, mClusterManager);
-        mClusterAlgorithm = new NonHierarchicalDistanceBasedAlgorithm<>();
-        mClusterManager.setAlgorithm(mClusterAlgorithm);
-        mClusterManager.setRenderer(renderer);
         // TODO: выключить анимацию загрузки
     }
 
@@ -208,70 +205,52 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     public void updateUserMarker(Location lastLocation) {
-        mUserLocation = lastLocation;
+        if (mMembersMarkers != null) {
+            for (Marker memberMarker : mMembersMarkers.values()) {
+                if (memberMarker.getPosition().latitude == lastLocation.getLatitude() &&
+                        memberMarker.getPosition().longitude == lastLocation.getLongitude()) {
+                    lastLocation.setLatitude(lastLocation.getLatitude() + OFFSET);
+                    lastLocation.setLongitude(lastLocation.getLongitude() + OFFSET);
+                }
+            }
+        }
 
-        //TODO: discuss: как правильно хранить данные? Может лучше создавать объект с текущей группой при старте приложения и хранить его в памяти?
-        // в таком случае правильно ли хранить это в поле активити? или нужен отдельный класс-хендлер?
-        //TODO: change this ASAP, all was hardcoded for testing. Need to use Model for current user.
-/*        mUserLocation = new bekrina.whereismobile.model.Location(lastLocation.getLatitude(),
-                lastLocation.getLongitude(), new Timestamp(System.currentTimeMillis()),
-                new User("me", "me", "me", new Group("test", "test")));*/
-        MyClusterItem clusterItem = new MyClusterItem(9999999, getString(R.string.user_location_marker),
-                new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()),
-                new Date(System.currentTimeMillis()));
-        if (mClusterAlgorithm.getItems().isEmpty() || !mClusterAlgorithm.getItems().contains(clusterItem)) {
-            mClusterManager.addItem(clusterItem);
+        String desc = getString(R.string.user_location_marker);
+        IconGenerator generator = new IconGenerator(this);
+        generator.setStyle(IconGenerator.STYLE_ORANGE);
+        Bitmap icon = generator.makeIcon(desc);
+
+        if (mUserMarker == null) {
+            mUserMarker = mGoogleMap.addMarker(new MarkerOptions()
+                    .title(desc)
+                    .position(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude())));
+            mUserMarker.setIcon(BitmapDescriptorFactory.fromBitmap(icon));
 
             mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastLocation.getLatitude(),
                     lastLocation.getLongitude()), 10));
         } else {
-            mClusterAlgorithm.getItems().remove(clusterItem);
-            //mClusterManager.clearItems();
-            //mClusterManager.setAlgorithm(mClusterAlgorithm);
-            mClusterManager.addItem(clusterItem);
+            mUserMarker.setPosition(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
+            mUserMarker.setTitle(desc);
         }
-        mClusterManager.cluster();
-
-        /*IconGenerator generator = new IconGenerator(this);
-        generator.setStyle(IconGenerator.STYLE_ORANGE);
-        //generator.setColor(R.color.accent_orange);
-        Bitmap icon = generator.makeIcon(desc);*/
     }
 
     public void updateMembersMarkers(List<bekrina.whereismobile.model.Location> membersLocations) {
         IconGenerator generator = new IconGenerator(this);
         generator.setStyle(IconGenerator.STYLE_BLUE);
         for (bekrina.whereismobile.model.Location location : membersLocations) {
+            Location memberLocation = new Location("MembersLocationsService");
+            memberLocation.setLatitude(location.getLatitude());
+            memberLocation.setLongitude(location.getLongitude());
+            String description = location.getUser().getFirstName() + " "
+                    + location.getUser().getLastName();
 
-            Date locationTime = new Date(location.getTimestamp().getTime());
-/*            SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-            String locationTimeFormatted = formatter.format(locationTime);*/
+            Marker memberMarker = mGoogleMap.addMarker(new MarkerOptions()
+                    .title(description)
+                    .position(new LatLng(memberLocation.getLatitude(), memberLocation.getLongitude())));
+            memberMarker.setIcon(BitmapDescriptorFactory.fromBitmap(generator.makeIcon(location.getUser().getFirstName())));
 
-            MyClusterItem memberClusterItem = new MyClusterItem(location.getUser().getId(), location.getUser().getFirstName()
-                    , new LatLng(location.getLatitude(), location.getLongitude()), locationTime);
-            if (mClusterAlgorithm.getItems().isEmpty() || !mClusterAlgorithm.getItems().contains(memberClusterItem)) {
-                mClusterManager.addItem(memberClusterItem);
-                mClusterManager.addItem(memberClusterItem);
-                mClusterManager.addItem(memberClusterItem);
-            } else {
-                mClusterAlgorithm.getItems().remove(memberClusterItem);
-                //mClusterManager.clearItems();
-                //mClusterManager.setAlgorithm(mClusterAlgorithm);
-                mClusterManager.addItem(memberClusterItem);
-                mClusterManager.addItem(memberClusterItem);
-                mClusterManager.addItem(memberClusterItem);
-                mClusterManager.addItem(memberClusterItem);
-            }
-
-
-            /*Marker memberMarker = mGoogleMap.addMarker(new MarkerOptions()
-                    .icon(BitmapDescriptorFactory.fromBitmap(generator.makeIcon(location.getUser().getFirstName())))
-                    .title(locationTimeFormatted)
-                    .position(new LatLng(location.getLatitude(), location.getLongitude())));
-            mMembersMarkers.put(location.getUser().getId(), memberMarker);*/
+            mMembersMarkers.put(location.getUser().getId(), memberMarker);
         }
-
-        mClusterManager.cluster();
     }
 
     protected void startLocationUpdates() {
@@ -413,7 +392,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     @Override
     public void onLeaveGroup() {
         mGoogleMap.clear();
-        mClusterManager.clearItems();
         updateUserMarker(mUserLocation);
         mRestManager.processGroupStatus(this);
     }
@@ -490,73 +468,17 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
     }
 
-}*/
+}
 
-class MyClusterItem implements ClusterItem {
-    private final int userId;
-    private final String title;
-    private final LatLng latLng;
-    private final Date date;
+class MyItem implements ClusterItem {
+    private final LatLng mPosition;
 
-    public MyClusterItem(int userId, String title, LatLng latLng, Date date) {
-        this.userId = userId;
-        this.title = title;
-        this.latLng = latLng;
-        this.date = date;
+    public MyItem(double lat, double lng) {
+        mPosition = new LatLng(lat, lng);
     }
 
     @Override
     public LatLng getPosition() {
-        return latLng;
+        return mPosition;
     }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public Date getDate() {
-        return date;
-    }
-
-    public int getUserId() {
-        return userId;
-    }
-
-    @Override
-    public boolean equals(Object object) {
-        if (!(object instanceof MyClusterItem)) {
-            return  false;
-        }
-        MyClusterItem item = (MyClusterItem) object;
-        if (item.getTitle().equals(title) && item.getUserId() == userId) {
-            return true;
-        }
-        return false;
-    }
-
-}
-
-class CustomClusterRenderer extends DefaultClusterRenderer<MyClusterItem> {
-    private final Context mContext;
-    public CustomClusterRenderer(Context context, GoogleMap map,
-                                 ClusterManager<MyClusterItem> clusterManager) {
-        super(context, map, clusterManager);
-        mContext = context;
-    }
-
-    @Override
-    protected void onBeforeClusterItemRendered(MyClusterItem item,
-                                               MarkerOptions markerOptions) {
-        final BitmapDescriptor markerDescriptor = BitmapDescriptorFactory.defaultMarker(
-                BitmapDescriptorFactory.HUE_ORANGE);
-        markerOptions.icon(markerDescriptor).snippet(item.getTitle());
-    }
-
-/*    @Override
-     protected void onBeforeClusterRendered(Cluster<MyClusterItem> cluster,
-                                            MarkerOptions markerOptions) {
-        final BitmapDescriptor markerDescriptor = BitmapDescriptorFactory.defaultMarker(
-                BitmapDescriptorFactory.HUE_AZURE);
-         markerOptions.icon(markerDescriptor).snippet("test");
-     }*/
-}
+}*/
