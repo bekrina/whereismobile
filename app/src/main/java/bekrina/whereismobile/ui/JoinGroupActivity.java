@@ -10,13 +10,14 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import bekrina.whereismobile.R;
-import bekrina.whereismobile.services.ApiService;
+import bekrina.whereismobile.listeners.JoinedToGroupListener;
+import bekrina.whereismobile.services.ApiRequestsManager;
 
-public class JoinGroupActivity extends AppCompatActivity implements ApiService.JoinedToGroupListener {
+public class JoinGroupActivity extends AppCompatActivity implements JoinedToGroupListener {
     public static final String TAG = JoinGroupActivity.class.getName();
 
     private EditText mGroupIdentity;
-    private ApiService mApiService;
+    private ApiRequestsManager mApiRequestsManager;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -25,14 +26,19 @@ public class JoinGroupActivity extends AppCompatActivity implements ApiService.J
         setContentView(R.layout.activity_join_group);
 
         mGroupIdentity = (EditText) findViewById(R.id.group_identity_field);
-        mApiService = ApiService.getInstance(this);
+        mApiRequestsManager = ApiRequestsManager.getInstance(this);
 
-        final Button submit = (Button) findViewById(R.id.submit_join);
+        final Button submit = (Button) findViewById(R.id.submit);
 
         submit.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                mApiService.joinGroup(JoinGroupActivity.this, mGroupIdentity.getText().toString(),
-                        JoinGroupActivity.this);
+                String groupIdentity = mGroupIdentity.getText().toString();
+                if (groupIdentity.equals("")) {
+                    mGroupIdentity.setError("Empty identity");
+                } else {
+                    mGroupIdentity.setError(null);
+                    mApiRequestsManager.joinGroup(groupIdentity, JoinGroupActivity.this);
+                }
             }
         });
     }
