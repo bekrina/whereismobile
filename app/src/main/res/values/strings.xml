@@ -53,7 +53,7 @@
     <string name="group_not_created_dialog_title">Group was not created.</string>
 
     <!-- For Map activity -->
-    <string name="user_location_marker">You are here</string>
+    <string name="user_location_marker">Me</string>
     <!-- Menu for Map activity -->
     <string name="no_group_menu_item">You are not in the group. Lets create or join one!</string>
     <string name="create_group_menu_item">Create group</string>

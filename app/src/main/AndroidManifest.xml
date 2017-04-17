@@ -38,7 +38,7 @@
         </activity>
         <activity android:name=".ui.JoinGroupActivity" >
         </activity>
-        <service android:name=".services.LocationSavingService" />
-        <service android:name=".services.MembersLocationsService" />
+        <service android:enabled="true" android:name="bekrina.whereismobile.services.LocationSavingService" />
+        <service android:enabled="true" android:name="bekrina.whereismobile.services.MembersLocationsService" />
     </application>
 </manifest>

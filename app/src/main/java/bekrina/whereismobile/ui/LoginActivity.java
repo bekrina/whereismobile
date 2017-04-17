@@ -35,7 +35,7 @@ public class LoginActivity extends AppCompatActivity implements
 
     private static final int RC_GET_AUTH_CODE = 9003;
     private static final String PROPERTIES_FILE = "app.properties";
-    private static final String CLIENT_ID_PROPERTY = "client_id";
+    private static final String CLIENT_ID_PROPERTY = "client_id_debug";
 
     private GoogleApiClient mGoogleApiClient;
     private SingletonNetwork mNetwork;

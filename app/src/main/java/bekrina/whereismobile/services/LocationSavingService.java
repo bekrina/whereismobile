@@ -64,6 +64,7 @@ public class LocationSavingService extends Service implements GoogleApiClient.Co
     }
     @Override
     public void onCreate() {
+        super.onCreate();
         if (mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
                     .addConnectionCallbacks(this)

@@ -11,13 +11,13 @@ import android.widget.EditText;
 
 import bekrina.whereismobile.R;
 import bekrina.whereismobile.listeners.JoinedToGroupListener;
-import bekrina.whereismobile.services.ApiRequestsManager;
+import bekrina.whereismobile.services.RestManager;
 
 public class JoinGroupActivity extends AppCompatActivity implements JoinedToGroupListener {
     public static final String TAG = JoinGroupActivity.class.getName();
 
     private EditText mGroupIdentity;
-    private ApiRequestsManager mApiRequestsManager;
+    private RestManager mRestManager;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -26,7 +26,7 @@ public class JoinGroupActivity extends AppCompatActivity implements JoinedToGrou
         setContentView(R.layout.activity_join_group);
 
         mGroupIdentity = (EditText) findViewById(R.id.group_identity_field);
-        mApiRequestsManager = ApiRequestsManager.getInstance(this);
+        mRestManager = RestManager.getInstance(this);
 
         final Button submit = (Button) findViewById(R.id.submit);
 
@@ -37,7 +37,7 @@ public class JoinGroupActivity extends AppCompatActivity implements JoinedToGrou
                     mGroupIdentity.setError("Empty identity");
                 } else {
                     mGroupIdentity.setError(null);
-                    mApiRequestsManager.joinGroup(groupIdentity, JoinGroupActivity.this);
+                    mRestManager.joinGroup(groupIdentity, JoinGroupActivity.this);
                 }
             }
         });

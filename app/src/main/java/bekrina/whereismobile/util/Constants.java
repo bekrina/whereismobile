@@ -14,7 +14,7 @@ public interface Constants {
     String FIRST_NAME = "firstName";
     String LAST_NAME = "lastName";
 
-    double OFFSET = 0.0005;
+    double OFFSET = 0.0002;
     int LOCATION_INTERVAL = 10000;
     int LOCATION_FASTEST_INTERVAL = 5000;
 

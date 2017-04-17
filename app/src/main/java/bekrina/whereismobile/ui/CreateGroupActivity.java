@@ -11,14 +11,14 @@ import android.widget.EditText;
 
 import bekrina.whereismobile.R;
 import bekrina.whereismobile.listeners.CreateGroupListener;
-import bekrina.whereismobile.services.ApiRequestsManager;
+import bekrina.whereismobile.services.RestManager;
 
 public class CreateGroupActivity extends AppCompatActivity
         implements CreateGroupListener {
     //TODO: объединить похожие активити с создать родительский класс
     private static final String TAG = CreateGroupActivity.class.getName();
 
-    private ApiRequestsManager mApiRequestsManager;
+    private RestManager mRestManager;
     private EditText mGroupNameView;
 
     @Override
@@ -26,13 +26,13 @@ public class CreateGroupActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_group);
 
-        mApiRequestsManager = ApiRequestsManager.getInstance(this);
+        mRestManager = RestManager.getInstance(this);
         mGroupNameView = (EditText) findViewById(R.id.group_name_field);
 
         final Button button = (Button) findViewById(R.id.submit);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                mApiRequestsManager.createGroup(mGroupNameView.getText().toString(),
+                mRestManager.createGroup(mGroupNameView.getText().toString(),
                         CreateGroupActivity.this);
             }
         });

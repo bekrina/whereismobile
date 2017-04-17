@@ -2,10 +2,7 @@ package bekrina.whereismobile.services;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.support.v7.app.AlertDialog;
 import android.util.Log;
 
 import com.android.volley.NetworkResponse;
@@ -24,7 +21,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import bekrina.whereismobile.R;
 import bekrina.whereismobile.listeners.CreateGroupListener;
 import bekrina.whereismobile.listeners.GroupStatusListener;
 import bekrina.whereismobile.listeners.InviteStatusListener;
@@ -32,8 +28,6 @@ import bekrina.whereismobile.listeners.JoinedToGroupListener;
 import bekrina.whereismobile.listeners.LeaveGroupListener;
 import bekrina.whereismobile.model.Group;
 import bekrina.whereismobile.model.Invite;
-import bekrina.whereismobile.ui.InviteToGroupActivity;
-import bekrina.whereismobile.ui.MapActivity;
 import bekrina.whereismobile.util.Constants;
 import bekrina.whereismobile.util.SingletonNetwork;
 
@@ -45,21 +39,21 @@ import static bekrina.whereismobile.util.Constants.INVITE_ACTION;
 import static bekrina.whereismobile.util.Constants.JOIN_ACTION;
 import static bekrina.whereismobile.util.Constants.LEAVE_ACTION;
 
-public class ApiRequestsManager {
-    private static ApiRequestsManager mInstance;
+public class RestManager {
+    private static RestManager mInstance;
     private SingletonNetwork mNetwork;
     private Context mContext;
 
-    private static final String TAG = ApiRequestsManager.class.getName();
+    private static final String TAG = RestManager.class.getName();
 
-    private ApiRequestsManager(Context context) {
+    private RestManager(Context context) {
         mNetwork = SingletonNetwork.getInstance(context);
         mContext = context;
     }
 
-    public static synchronized ApiRequestsManager getInstance(Context context) {
+    public static synchronized RestManager getInstance(Context context) {
         if (mInstance == null) {
-            mInstance = new ApiRequestsManager(context);
+            mInstance = new RestManager(context);
             return mInstance;
         }
         return mInstance;
