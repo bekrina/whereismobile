@@ -2,9 +2,7 @@ package bekrina.whereismobile.ui;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
@@ -31,23 +29,13 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
-import com.google.maps.android.clustering.Cluster;
-import com.google.maps.android.clustering.ClusterItem;
-import com.google.maps.android.clustering.ClusterManager;
-import com.google.maps.android.clustering.algo.Algorithm;
-import com.google.maps.android.clustering.algo.NonHierarchicalDistanceBasedAlgorithm;
-import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.google.maps.android.ui.IconGenerator;
 
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +45,6 @@ import bekrina.whereismobile.listeners.GroupStatusListener;
 import bekrina.whereismobile.listeners.LeaveGroupListener;
 import bekrina.whereismobile.listeners.LocationsUpdatedListener;
 import bekrina.whereismobile.model.Group;
-import bekrina.whereismobile.model.User;
 import bekrina.whereismobile.services.RestManager;
 import bekrina.whereismobile.services.LocationSavingService;
 import bekrina.whereismobile.services.MembersLocationsService;
@@ -87,6 +74,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     private RestManager mRestManager;
     private GoogleApiHelper mGoogleApiHelper;
+
+    private boolean mInGroup = false;
 
     private GoogleMap mGoogleMap;
 
@@ -174,7 +163,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
             googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
             googleMap.setMyLocationEnabled(true);
-            mGoogleMap = googleMap;mGoogleMap.getUiSettings().setMyLocationButtonEnabled(false);
+            mGoogleMap = googleMap;
+            mGoogleMap.getUiSettings().setMyLocationButtonEnabled(false);
             mGoogleMap.setMyLocationEnabled(false);
         } else {
             ActivityCompat.requestPermissions(this,
@@ -306,8 +296,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         // Handle item selection
         switch (item.getItemId()) {
             case R.id.group_name_menu_item:
-                Intent groupInfoIntent = new Intent(getBaseContext(), GroupInfoActivity.class);
-                startActivity(groupInfoIntent);
+                if (mInGroup) {
+                    Intent groupInfoIntent = new Intent(getBaseContext(), GroupInfoActivity.class);
+                    startActivity(groupInfoIntent);
+                }
                 return true;
             case R.id.create_group_menu_item:
                 Intent createGroupIntent = new Intent(getBaseContext(), CreateGroupActivity.class);
@@ -343,6 +335,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     @Override
     public void onUserHasGroup(Group group) {
+        mInGroup = true;
+
         mCreateGroupItem.setVisible(false);
         mJoinGroupItem.setVisible(false);
         mLeaveGroupItem.setVisible(true);
@@ -407,78 +401,4 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         Intent loginActivityIntent = new Intent(this, LoginActivity.class);
         startActivity(loginActivityIntent);
     }
-
-
-    //TODO: check this
-/*    */
-
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     *//*
-    public Action getIndexApiAction() {
-        Thing object = new Thing.Builder()
-                .setName("Map Page") //  Define a title for the content shown.
-                // Make sure this auto-generated URL is correct.
-                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
-                .build();
-        return new Action.Builder(Action.TYPE_VIEW)
-                .setObject(object)
-                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
-                .build();
-    }*/
 }
-
-
-
-
-    /*// Declare a variable for the cluster manager.
-    private ClusterManager<MyItem> mClusterManager;
-
-    private void setUpClusterer() {
-        // Position the map.
-        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(51.503186, -0.126446), 10));
-
-        // Initialize the manager with the context and the map.
-        // (Activity extends context, so we can pass 'this' in the constructor.)
-        mClusterManager = new ClusterManager<MyItem>(this, mGoogleMap);
-
-        // Point the map's listeners at the listeners implemented by the cluster
-        // manager.
-        getMap().setOnCameraIdleListener(mClusterManager);
-        getMap().setOnMarkerClickListener(mClusterManager);
-
-        // Add cluster items (markers) to the cluster manager.
-        addItems();
-    }
-
-    private void addItems() {
-
-        // Set some lat/lng coordinates to start with.
-        double lat = 51.5145160;
-        double lng = -0.1270060;
-
-        // Add ten cluster items in close proximity, for purposes of this example.
-        for (int i = 0; i < 10; i++) {
-            double offset = i / 60d;
-            lat = lat + offset;
-            lng = lng + offset;
-            MyItem offsetItem = new MyItem(lat, lng);
-            mClusterManager.addItem(offsetItem);
-        }
-    }
-
-}
-
-class MyItem implements ClusterItem {
-    private final LatLng mPosition;
-
-    public MyItem(double lat, double lng) {
-        mPosition = new LatLng(lat, lng);
-    }
-
-    @Override
-    public LatLng getPosition() {
-        return mPosition;
-    }
-}*/

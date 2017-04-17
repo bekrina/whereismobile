@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">WhereIs</string>
+    <string name="title_text">WhereIs</string>
+    <string name="welcome_message">Чтобы использовать приложение войдите с помощью аккаунта Google</string>
+    <string name="ok">Ок</string>
+
+    <!-- Google Play Services error for Toast -->
+    <string name="play_services_error_fmt">Ошибка Google Play Services: %i</string>
+
+    <!-- Button labels -->
+    <string name="sign_out">Выйти</string>
+
+    <!-- Content Description for images -->
+    <string name="desc_google_icon">Google Logo</string>
+
+    <!-- Activity Names and Descriptions -->
+    <string name="name_login_activity">Login Activity</string>
+
+    <!-- For Login activity -->
+    <string name="connections_fmt">Connections: %1$s</string>
+    <string name="msg_contacts_failed">Failed to log in.</string>
+    <string name="error_during_login">Произошла ошибка при подключении. Пожалуйста попробуйте войти ещё раз. </string>
+    <string name="login_failed">Ошибка при входе в аккаунт</string>
+    <string name="login_successfull">Вы успешно вошли в аккаунт</string>
+    <string name="sign_in_button">Войти с Google</string>
+
+    <!-- For Create Group activity-->
+    <string name="lets_create_new_group">Создайте новую группу</string>
+    <string name="group_name_field">Название группы</string>
+    <string name="submit">Отправить</string>
+    <string name="group_not_created_dialog_message">Произошла ошибка в процессе создания группы</string>
+    <string name="group_not_created_dialog_title">Группа не создана</string>
+
+    <!-- For Map activity -->
+    <string name="user_location_marker">Я</string>
+    <!-- Menu for Map activity -->
+    <string name="no_group_menu_item">Вы не состоите в группе.</string>
+    <string name="create_group_menu_item">Создать группу</string>
+    <string name="join_group_menu_item">Присоединиться к группе</string>
+    <string name="invite_to_group">Пригласить в группу</string>
+    <string name="leave_group_menu_item">Выйти из группы</string>
+    <string name="settings_menu_item">Настройки</string>
+    <string name="sign_out_menu_item">Выйти из аккаунта</string>
+
+    <!-- For Invite To Group activity -->
+    <string name="lets_invite_someone">Пригласите нового участника</string>
+    <string name="invitation_email_field">Email</string>
+    <string name="invite_sent_dialog_message">Отлично!</string>
+    <string name="invite_sent_dialog_title">Приглашение отправлено</string>
+    <string name="invite_already_exists_dialog_title">Такое приглашение уже есть</string>
+    <string name="invite_already_exists_dialog_message">Пользователь приглашён в эту группу</string>
+
+    <!-- For Join Group activity -->
+    <string name="lets_join_a_group">Введите код группы чтобы присоединиться</string>
+    <string name="group_identity_field">Код группы</string>
+    <string name="joined_dialog_title">Вы присоединились к группе</string>
+    <string name="joined_dialog_message">Переходим к карте</string>
+    <string name="no_invite_for_user_dialog_title">Извините, для вас нет приглашения в эту группу</string>
+    <string name="no_invite_for_user_dialog_message">Вы должны быть приглашены, чтобы присоединиться</string>
+
+    <!-- For Group Info activity -->
+    <string name="group_name_label">Название группы:</string>
+    <string name="group_identity_label">Код:</string>
+</resources>

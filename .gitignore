@@ -9,4 +9,5 @@
 .externalNativeBuild
 /.idea
 /app/google-services.json
-/app/src/main/assets/app.properties
+/app/src/main/assets/*
+
