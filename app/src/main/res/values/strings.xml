@@ -1,7 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">WhereIs</string>
     <string name="title_text">WhereIs</string>
-    <string name="welcome_message">Welcome!</string>
+    <string name="welcome_message">Enter with Google account to use application</string>
     <string name="ok">Ok</string>
 
     <!-- Sign-in status messages -->
@@ -79,7 +80,7 @@
     <string name="no_invite_for_user_dialog_message">Invite is required for joining</string>
     <string name="no_invite_for_user_dialog_title">Sorry, you have no invite to this group</string>
 
-     <!-- For Group Info activity -->
+    <!-- For Group Info activity -->
     <string name="group_name_label">Group name:</string>
     <string name="group_identity_label">Identity:</string>
 </resources>
