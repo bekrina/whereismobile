@@ -34,6 +34,8 @@
 
     <!-- For Map activity -->
     <string name="user_location_marker">Я</string>
+    <string name="user_left_group_dialog_title">Готово!</string>
+    <string name="user_left_group_dialog_message">Bы вышли из группы</string>
     <!-- Menu for Map activity -->
     <string name="no_group_menu_item">Вы не состоите в группе.</string>
     <string name="create_group_menu_item">Создать группу</string>
