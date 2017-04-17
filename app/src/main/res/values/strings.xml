@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">WhereIs</string>
     <string name="title_text">WhereIs</string>
-    <string name="welcome_message">Enter with Google account to use application</string>
+    <string name="welcome_message">Welcome!</string>
     <string name="ok">Ok</string>
 
     <!-- Sign-in status messages -->
@@ -55,6 +55,8 @@
 
     <!-- For Map activity -->
     <string name="user_location_marker">Me</string>
+    <string name="user_left_group_dialog_title">Success</string>
+    <string name="user_left_group_dialog_message">You\'ve left the group</string>
     <!-- Menu for Map activity -->
     <string name="no_group_menu_item">You are not in the group. Lets create or join one!</string>
     <string name="create_group_menu_item">Create group</string>

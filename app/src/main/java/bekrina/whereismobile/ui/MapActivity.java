@@ -2,7 +2,9 @@ package bekrina.whereismobile.ui;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
@@ -162,9 +164,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 == PackageManager.PERMISSION_GRANTED) {
 
             googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-            googleMap.setMyLocationEnabled(true);
             mGoogleMap = googleMap;
-            mGoogleMap.getUiSettings().setMyLocationButtonEnabled(false);
             mGoogleMap.setMyLocationEnabled(false);
         } else {
             ActivityCompat.requestPermissions(this,
@@ -325,6 +325,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     @Override
     public void onLocationChanged(Location location) {
+        mUserLocation = location;
         updateUserMarker(location);
     }
 
@@ -386,8 +387,20 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     @Override
     public void onLeaveGroup() {
         mGoogleMap.clear();
+        mUserMarker = null;
         updateUserMarker(mUserLocation);
         mRestManager.processGroupStatus(this);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.user_left_group_dialog_message)
+                .setTitle(R.string.user_left_group_dialog_title);
+        builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
     @Override
