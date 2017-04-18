@@ -6,23 +6,30 @@ import com.google.maps.android.clustering.ClusterItem;
 import java.sql.Date;
 import java.util.Objects;
 
+import bekrina.whereismobile.model.Location;
+
 
 public class EditableClusterItem implements ClusterItem {
     private final int userId;
-    private final String title;
-    private final LatLng latLng;
-    private final Date date;
+    private String title;
+    private LatLng latLng;
+    private Date date;
 
-    public EditableClusterItem(int userId, String title, LatLng latLng, Date date) {
-        this.userId = userId;
-        this.title = title;
-        this.latLng = latLng;
-        this.date = date;
+    public EditableClusterItem(Location location) {
+        this.userId = location.getUser().getId();
+        this.title = location.getUser().getFirstName() + "\n" + location.getUser().getLastName();
+        this.latLng = new LatLng(location.getLatitude(), location.getLongitude());
+        this.date = new Date(System.currentTimeMillis());
     }
 
     @Override
     public LatLng getPosition() {
         return latLng;
+    }
+
+    public void updatePosition(LatLng position) {
+        latLng = position;
+        this.date = new Date(System.currentTimeMillis());
     }
 
     public String getTitle() {

@@ -8,45 +8,52 @@ import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
-public class EditableClusterManager<T extends ClusterItem> extends ClusterManager<T> {
+public class EditableClusterManager<T extends EditableClusterItem> extends ClusterManager<T> {
     private MarkerManager mMarkerManager;
 
-    private Set<ClusterItem> mClusterItems;
+    private Map<Integer, EditableClusterItem> mClusterItems;
 
-    public EditableClusterManager(Context context, GoogleMap map, MarkerManager markerManager) {
-        super(context, map, markerManager);
-        mMarkerManager = markerManager;
-        mClusterItems = new HashSet<>();
+    public EditableClusterManager(Context context, GoogleMap map) {
+        super(context, map);
+        mClusterItems = new HashMap<>();
     }
 
     @Override
     public void addItem(T item) {
-        if (mClusterItems.add(item)) {
+        if (!mClusterItems.containsKey(item.getUserId())) {
+            mClusterItems.put(item.getUserId(), item);
             super.addItem(item);
         }
     }
 
     @Override
     public void addItems(Collection<T> items) {
-        if (mClusterItems.addAll(items)) {
-            super.addItems(items);
+        for (T item : items) {
+            if (!mClusterItems.containsKey(item.getUserId())) {
+                mClusterItems.put(item.getUserId(), item);
+                super.addItem(item);
+            }
         }
     }
 
     @Override
     public void removeItem (T item) {
-        mClusterItems.remove(item);
+        mClusterItems.remove(item.getUserId());
         super.removeItem(item);
-        super.cluster();
     }
 
-    public void replaceWithNewPosition(T item) {
-        if (mClusterItems.contains(item)) {
-            mClusterItems.remove(item);
-            mClusterItems.add(item);
+    public void updatePosition(T item) {
+        if (mClusterItems.containsKey(item.getUserId())) {
+            mClusterItems.get(item.getUserId()).updatePosition(item.getPosition());
         }
+    }
+
+    public boolean hasItemOfUser(int userId) {
+        return mClusterItems.containsKey(userId);
     }
 }

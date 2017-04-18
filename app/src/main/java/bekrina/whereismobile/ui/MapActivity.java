@@ -7,6 +7,7 @@ import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.location.Location;
@@ -38,15 +39,19 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
 import com.google.maps.android.ui.IconGenerator;
 
+import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import bekrina.whereismobile.R;
+import bekrina.whereismobile.exceptions.NoCurrentUserException;
 import bekrina.whereismobile.listeners.GroupStatusListener;
 import bekrina.whereismobile.listeners.LeaveGroupListener;
 import bekrina.whereismobile.listeners.LocationsUpdatedListener;
 import bekrina.whereismobile.model.Group;
+import bekrina.whereismobile.model.User;
 import bekrina.whereismobile.services.RestManager;
 import bekrina.whereismobile.services.LocationSavingService;
 import bekrina.whereismobile.services.MembersLocationsService;
@@ -57,6 +62,8 @@ import static bekrina.whereismobile.util.Constants.LOCATION_FASTEST_INTERVAL;
 import static bekrina.whereismobile.util.Constants.LOCATION_INTERVAL;
 import static bekrina.whereismobile.util.Constants.OFFSET;
 import static bekrina.whereismobile.util.Constants.PERMISSIONS_REQUEST_FINE_LOCATION;
+import static bekrina.whereismobile.util.Constants.USER;
+import static bekrina.whereismobile.util.Constants.USER_INFO_PREFERENCES;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, LocationListener,
         LocationsUpdatedListener, GroupStatusListener, GoogleApiClient.ConnectionCallbacks,
@@ -82,6 +89,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private GoogleMap mGoogleMap;
 
     private Location mUserLocation;
+
+    private EditableClusterManager<EditableClusterItem> mClusterManager;
+
+    private User currentUser;
 
     private MembersLocationsService mMembersLocationsService;
     private boolean mMembersLocationsBound;
@@ -114,9 +125,21 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         MapFragment mapFragment = (MapFragment) getFragmentManager()
                 .findFragmentById(R.id.map);
 
+        SharedPreferences sharedPreferences = getSharedPreferences(USER_INFO_PREFERENCES, 0);
+        Gson gson = new Gson();
+        String userJson = sharedPreferences.getString(USER, "");
+        if (!userJson.equals("")) {
+            currentUser = gson.fromJson(userJson, User.class);
+        } else {
+            Log.e(TAG, "onCreate: No current user in shared preferences");
+            throw new NoCurrentUserException("No current user in shared preferences");
+        }
+
+
         //ProgressDialog.show(this, "Loading", "Loading the map...");
         //TODO: включить анимацию загрузки
         mapFragment.getMapAsync(this);
+
     }
 
     @Override
@@ -171,6 +194,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     PERMISSIONS_REQUEST_FINE_LOCATION);
         }
+
+        mClusterManager = new EditableClusterManager<>(this, mGoogleMap);
         // TODO: выключить анимацию загрузки
     }
 
@@ -195,52 +220,41 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     public void updateUserMarker(Location lastLocation) {
-        if (mMembersMarkers != null) {
-            for (Marker memberMarker : mMembersMarkers.values()) {
-                if (memberMarker.getPosition().latitude == lastLocation.getLatitude() &&
-                        memberMarker.getPosition().longitude == lastLocation.getLongitude()) {
-                    lastLocation.setLatitude(lastLocation.getLatitude() + OFFSET);
-                    lastLocation.setLongitude(lastLocation.getLongitude() + OFFSET);
-                }
-            }
-        }
-
-        String desc = getString(R.string.user_location_marker);
-        IconGenerator generator = new IconGenerator(this);
-        generator.setStyle(IconGenerator.STYLE_ORANGE);
-        Bitmap icon = generator.makeIcon(desc);
-
-        if (mUserMarker == null) {
-            mUserMarker = mGoogleMap.addMarker(new MarkerOptions()
-                    .title(desc)
-                    .position(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude())));
-            mUserMarker.setIcon(BitmapDescriptorFactory.fromBitmap(icon));
-
+        bekrina.whereismobile.model.Location location = new bekrina.whereismobile.model.Location(
+                lastLocation.getLatitude(), lastLocation.getLongitude(), new Timestamp(System.currentTimeMillis()), currentUser);
+        EditableClusterItem itemWithCurrentLocation = new EditableClusterItem(location);
+        if (mClusterManager.hasItemOfUser(currentUser.getId())) {
+            mClusterManager.updatePosition(itemWithCurrentLocation);
+        } else {
+            mClusterManager.addItem(itemWithCurrentLocation);
             mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastLocation.getLatitude(),
                     lastLocation.getLongitude()), 10));
-        } else {
-            mUserMarker.setPosition(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
-            mUserMarker.setTitle(desc);
         }
+
+        mClusterManager.cluster();
+
+
+
+        /*IconGenerator generator = new IconGenerator(this);
+        generator.setStyle(IconGenerator.STYLE_ORANGE);
+        Bitmap icon = generator.makeIcon(desc);
+        mUserMarker.setIcon(BitmapDescriptorFactory.fromBitmap(icon));*/
+
+        /*mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastLocation.getLatitude(),
+                    lastLocation.getLongitude()), 10));*/
     }
 
     public void updateMembersMarkers(List<bekrina.whereismobile.model.Location> membersLocations) {
-        IconGenerator generator = new IconGenerator(this);
-        generator.setStyle(IconGenerator.STYLE_BLUE);
         for (bekrina.whereismobile.model.Location location : membersLocations) {
-            Location memberLocation = new Location("MembersLocationsService");
-            memberLocation.setLatitude(location.getLatitude());
-            memberLocation.setLongitude(location.getLongitude());
-            String description = location.getUser().getFirstName() + " "
-                    + location.getUser().getLastName();
 
-            Marker memberMarker = mGoogleMap.addMarker(new MarkerOptions()
-                    .title(description)
-                    .position(new LatLng(memberLocation.getLatitude(), memberLocation.getLongitude())));
-            memberMarker.setIcon(BitmapDescriptorFactory.fromBitmap(generator.makeIcon(location.getUser().getFirstName())));
-
-            mMembersMarkers.put(location.getUser().getId(), memberMarker);
+            EditableClusterItem memberItemWithNewPosition = new EditableClusterItem(location);
+            if (mClusterManager.hasItemOfUser(location.getUser().getId())) {
+                mClusterManager.updatePosition(memberItemWithNewPosition);
+            } else {
+                mClusterManager.addItem(memberItemWithNewPosition);
+            }
         }
+        mClusterManager.cluster();
     }
 
     protected void startLocationUpdates() {
