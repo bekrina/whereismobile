@@ -11,13 +11,15 @@ import bekrina.whereismobile.model.Location;
 
 public class EditableClusterItem implements ClusterItem {
     private final int userId;
-    private String title;
+    private final String title;
     private LatLng latLng;
-    private Date date;
+    private final Date date;
+    private final boolean isCurrentUser;
 
-    public EditableClusterItem(Location location) {
+    public EditableClusterItem(Location location, boolean isCurrentUser) {
+        this.isCurrentUser = isCurrentUser;
         this.userId = location.getUser().getId();
-        this.title = location.getUser().getFirstName() + "\n" + location.getUser().getLastName();
+        this.title = location.getUser().getFirstName();
         this.latLng = new LatLng(location.getLatitude(), location.getLongitude());
         this.date = new Date(System.currentTimeMillis());
     }
@@ -27,13 +29,17 @@ public class EditableClusterItem implements ClusterItem {
         return latLng;
     }
 
-    public void updatePosition(LatLng position) {
+    public void setPosition(LatLng position) {
         latLng = position;
-        this.date = new Date(System.currentTimeMillis());
     }
 
     public String getTitle() {
         return title;
+    }
+
+    @Override
+    public String getSnippet() {
+        return null;
     }
 
     public Date getDate() {
@@ -44,22 +50,8 @@ public class EditableClusterItem implements ClusterItem {
         return userId;
     }
 
-    @Override
-    public boolean equals(Object object) {
-        if (!(object instanceof EditableClusterItem)) {
-            return  false;
-        }
-        EditableClusterItem item = (EditableClusterItem) object;
-        if (item.getTitle().equals(title) && item.getUserId() == userId) {
-            return true;
-        }
-        return false;
+    public boolean isCurrentUser() {
+        return isCurrentUser;
     }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(userId, title);
-    }
-
 }
 

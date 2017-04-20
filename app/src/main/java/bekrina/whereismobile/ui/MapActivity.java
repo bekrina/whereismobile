@@ -196,6 +196,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
 
         mClusterManager = new EditableClusterManager<>(this, mGoogleMap);
+        EditableClusterRenderer clusterRenderer = new EditableClusterRenderer(this, mGoogleMap, mClusterManager);
+        clusterRenderer.setMinClusterSize(2);
+        mClusterManager.setRenderer(clusterRenderer);
+        mClusterManager.onCameraIdle();
         // TODO: выключить анимацию загрузки
     }
 
@@ -222,7 +226,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     public void updateUserMarker(Location lastLocation) {
         bekrina.whereismobile.model.Location location = new bekrina.whereismobile.model.Location(
                 lastLocation.getLatitude(), lastLocation.getLongitude(), new Timestamp(System.currentTimeMillis()), currentUser);
-        EditableClusterItem itemWithCurrentLocation = new EditableClusterItem(location);
+        EditableClusterItem itemWithCurrentLocation = new EditableClusterItem(location, true);
         if (mClusterManager.hasItemOfUser(currentUser.getId())) {
             mClusterManager.updatePosition(itemWithCurrentLocation);
         } else {
@@ -230,24 +234,14 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastLocation.getLatitude(),
                     lastLocation.getLongitude()), 10));
         }
-
         mClusterManager.cluster();
-
-
-
-        /*IconGenerator generator = new IconGenerator(this);
-        generator.setStyle(IconGenerator.STYLE_ORANGE);
-        Bitmap icon = generator.makeIcon(desc);
-        mUserMarker.setIcon(BitmapDescriptorFactory.fromBitmap(icon));*/
-
-        /*mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastLocation.getLatitude(),
-                    lastLocation.getLongitude()), 10));*/
+        //mClusterManager.onCameraIdle();
     }
 
     public void updateMembersMarkers(List<bekrina.whereismobile.model.Location> membersLocations) {
         for (bekrina.whereismobile.model.Location location : membersLocations) {
 
-            EditableClusterItem memberItemWithNewPosition = new EditableClusterItem(location);
+            EditableClusterItem memberItemWithNewPosition = new EditableClusterItem(location, false);
             if (mClusterManager.hasItemOfUser(location.getUser().getId())) {
                 mClusterManager.updatePosition(memberItemWithNewPosition);
             } else {
@@ -255,6 +249,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             }
         }
         mClusterManager.cluster();
+        //mClusterManager.onCameraIdle();
     }
 
     protected void startLocationUpdates() {
