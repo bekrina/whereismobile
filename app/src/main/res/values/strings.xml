@@ -2,7 +2,6 @@
 <resources>
     <string name="app_name">WhereIs</string>
     <string name="title_text">WhereIs</string>
-    <string name="welcome_message">Welcome!</string>
     <string name="ok">Ok</string>
 
     <!-- Sign-in status messages -->
@@ -45,6 +44,7 @@
     <string name="login_failed">Failed to sign in</string>
     <string name="login_successfull">You are logged in!</string>
     <string name="sign_in_button">Sign in with Google</string>
+    <string name="welcome_message">Login with Google to start</string>
 
     <!-- For Create Group activity-->
     <string name="lets_create_new_group">Let\'s create a new group!</string>

@@ -10,6 +10,7 @@
     <color name="members_blue">#2196F3</color>
     <color name="actionbar_green">#66BB6A</color>
     <color name="primarydark_green">#388E3C</color>
+    <color name="dark_green_text">#1B5E20</color>
     <color name="accent_orange">#FF9800</color>
     <color name="white">#FFFFFF</color>
     <color name="non_editable_groupname_color">#212121</color>

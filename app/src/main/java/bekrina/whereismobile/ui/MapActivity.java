@@ -11,6 +11,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
@@ -22,6 +23,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ProgressBar;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -135,9 +138,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             throw new NoCurrentUserException("No current user in shared preferences");
         }
 
-
-        //ProgressDialog.show(this, "Loading", "Loading the map...");
-        //TODO: включить анимацию загрузки
         mapFragment.getMapAsync(this);
 
     }
@@ -200,7 +200,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         clusterRenderer.setMinClusterSize(2);
         mClusterManager.setRenderer(clusterRenderer);
         mClusterManager.onCameraIdle();
-        // TODO: выключить анимацию загрузки
     }
 
     @Override
@@ -211,9 +210,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    //TODO: test this or change
                     startLocationUpdates();
                 } else {
+                    Log.e(TAG, "onRequestPermissionResult: no permissions");
                     // TODO: show no permission screen
                 }
                 return;
@@ -235,7 +234,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     lastLocation.getLongitude()), 10));
         }
         mClusterManager.cluster();
-        //mClusterManager.onCameraIdle();
     }
 
     public void updateMembersMarkers(List<bekrina.whereismobile.model.Location> membersLocations) {
@@ -249,7 +247,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             }
         }
         mClusterManager.cluster();
-        //mClusterManager.onCameraIdle();
     }
 
     protected void startLocationUpdates() {
@@ -298,8 +295,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         return true;
     }
 
-
-    //TODO: complete this method
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection

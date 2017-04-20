@@ -39,9 +39,6 @@ public class EditableClusterRenderer extends DefaultClusterRenderer<EditableClus
         IconGenerator generator = new IconGenerator(mContext);
         if(item.isCurrentUser()) {
         generator.setStyle(IconGenerator.STYLE_ORANGE);
-        // TODO: проверять отрисованные маркеры и рисовать их подальше друг от друга если у них одно местоположение. должен быть колбек для этого
-        /*mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastLocation.getLatitude(),
-                    lastLocation.getLongitude()), 10));*/
         } else {
             generator.setStyle(IconGenerator.STYLE_BLUE);
         }
@@ -58,8 +55,6 @@ public class EditableClusterRenderer extends DefaultClusterRenderer<EditableClus
     @Override
      protected void onBeforeClusterRendered(Cluster<EditableClusterItem> cluster,
                                             MarkerOptions markerOptions) {
-        // TODO: сделать остальные todo на русском
-
         IconGenerator generator = new IconGenerator(mContext);
         generator.setBackground(ContextCompat.getDrawable(mContext, R.drawable.blue_circle));
 
