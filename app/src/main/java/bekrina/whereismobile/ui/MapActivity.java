@@ -197,7 +197,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         mClusterManager = new EditableClusterManager<>(this, mGoogleMap);
         EditableClusterRenderer clusterRenderer = new EditableClusterRenderer(this, mGoogleMap, mClusterManager);
-        clusterRenderer.setMinClusterSize(2);
+        clusterRenderer.setMinClusterSize(1);
         mClusterManager.setRenderer(clusterRenderer);
         mClusterManager.onCameraIdle();
     }
