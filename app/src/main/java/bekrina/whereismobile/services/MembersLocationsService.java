@@ -73,7 +73,7 @@ public class MembersLocationsService extends Service {
             };
 
             ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
-            scheduledExecutorService.scheduleAtFixedRate(updateMembersLocations, 0, 5, TimeUnit.MINUTES);
+            scheduledExecutorService.scheduleAtFixedRate(updateMembersLocations, 0, 1, TimeUnit.MINUTES);
 
             return MembersLocationsService.this;
         }

@@ -40,6 +40,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
+import com.google.maps.android.clustering.Cluster;
+import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.ui.IconGenerator;
 
 import java.sql.Date;
@@ -198,8 +200,15 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mClusterManager = new EditableClusterManager<>(this, mGoogleMap);
         EditableClusterRenderer clusterRenderer = new EditableClusterRenderer(this, mGoogleMap, mClusterManager);
         clusterRenderer.setMinClusterSize(1);
+
         mClusterManager.setRenderer(clusterRenderer);
-        mClusterManager.onCameraIdle();
+
+        mGoogleMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
+            @Override
+            public void onCameraIdle() {
+                mClusterManager.onCameraIdle();
+            }
+        });
     }
 
     @Override

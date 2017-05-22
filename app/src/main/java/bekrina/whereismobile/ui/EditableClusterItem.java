@@ -21,7 +21,11 @@ public class EditableClusterItem implements ClusterItem {
         this.userId = location.getUser().getId();
         this.title = location.getUser().getFirstName();
         this.latLng = new LatLng(location.getLatitude(), location.getLongitude());
-        this.date = new Date(System.currentTimeMillis());
+        if (location.getTimestamp() != null) {
+            this.date = new Date(location.getTimestamp().getTime());
+        } else {
+            this.date = new Date(System.currentTimeMillis());
+        }
     }
 
     @Override

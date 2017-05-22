@@ -2,6 +2,7 @@ package bekrina.whereismobile.services;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
 
@@ -28,6 +29,7 @@ import bekrina.whereismobile.listeners.JoinedToGroupListener;
 import bekrina.whereismobile.listeners.LeaveGroupListener;
 import bekrina.whereismobile.model.Group;
 import bekrina.whereismobile.model.Invite;
+import bekrina.whereismobile.ui.LoginActivity;
 import bekrina.whereismobile.util.Constants;
 import bekrina.whereismobile.util.SingletonNetwork;
 

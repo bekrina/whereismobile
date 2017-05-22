@@ -7,6 +7,7 @@ import android.graphics.Typeface;
 import android.support.v4.content.ContextCompat;
 import android.text.Layout;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.GridLayout;
 import android.widget.TextView;
@@ -14,6 +15,7 @@ import android.widget.TextView;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
@@ -22,15 +24,19 @@ import com.google.maps.android.ui.IconGenerator;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Iterator;
 
 import bekrina.whereismobile.R;
 
 public class EditableClusterRenderer extends DefaultClusterRenderer<EditableClusterItem> {
     private final Context mContext;
-    public EditableClusterRenderer(Context context, GoogleMap map,
-                                    ClusterManager<EditableClusterItem> clusterManager) {
+    private GoogleMap mGoogleMap;
+    public EditableClusterRenderer(final Context context, final GoogleMap map,
+                                   ClusterManager<EditableClusterItem> clusterManager) {
         super(context, map, clusterManager);
         mContext = context;
+        mGoogleMap = map;
     }
 
     @Override
@@ -54,7 +60,7 @@ public class EditableClusterRenderer extends DefaultClusterRenderer<EditableClus
 
     @Override
      protected void onBeforeClusterRendered(Cluster<EditableClusterItem> cluster,
-                                            MarkerOptions markerOptions) {
+                                            final MarkerOptions markerOptions) {
         IconGenerator generator = new IconGenerator(mContext);
         generator.setBackground(ContextCompat.getDrawable(mContext, R.drawable.blue_circle));
 
@@ -77,5 +83,19 @@ public class EditableClusterRenderer extends DefaultClusterRenderer<EditableClus
         }
         Bitmap icon = generator.makeIcon(String.valueOf(cluster.getSize()));
         markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon));
+
+        StringBuilder stringBuilder = new StringBuilder();
+        if (cluster.getSize() <= 10) {
+            Collection<EditableClusterItem> items = cluster.getItems();
+            Iterator<EditableClusterItem> iterator = items.iterator();
+            
+            while (iterator.hasNext()) {
+                stringBuilder.append(iterator.next().getTitle());
+                if (iterator.hasNext()) {
+                    stringBuilder.append(", ");
+                }
+            }
+        }
+        markerOptions.title(stringBuilder.toString());
      }
 }
