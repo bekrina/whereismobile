@@ -9,8 +9,12 @@ public interface Constants {
     String IDENTITY = "identity";
     String LAT = "latitude";
     String LNG = "longitude";
-    String EMAIL = "email";
     String USER = "user";
+
+
+    String USER_INFO_PREFERENCES = "userInfo";
+    String ID = "id";
+    String EMAIL = "email";
     String FIRST_NAME = "firstName";
     String LAST_NAME = "lastName";
 
