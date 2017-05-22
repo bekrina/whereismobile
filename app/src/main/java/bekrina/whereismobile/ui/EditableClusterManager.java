@@ -33,6 +33,7 @@ public class EditableClusterManager<T extends EditableClusterItem> extends Clust
         if (!mClusterItems.containsKey(item.getUserId())) {
             mClusterItems.put(item.getUserId(), item);
             super.addItem(item);
+            super.cluster();
         }
     }
 
@@ -42,6 +43,7 @@ public class EditableClusterManager<T extends EditableClusterItem> extends Clust
             if (!mClusterItems.containsKey(item.getUserId())) {
                 mClusterItems.put(item.getUserId(), item);
                 super.addItem(item);
+                super.cluster();
             }
         }
     }
@@ -50,25 +52,16 @@ public class EditableClusterManager<T extends EditableClusterItem> extends Clust
     public void removeItem (T item) {
         mClusterItems.remove(item.getUserId());
         super.removeItem(item);
+        super.cluster();
     }
 
     public void updatePosition(T item) {
-        /*for (Marker marker : getMarkerCollection().getMarkers()) {
-            if (Math.abs(item.getPosition().latitude - marker.getPosition().latitude) <= OFFSET ||
-                    Math.abs(item.getPosition().longitude - marker.getPosition().longitude) <= OFFSET ) {
-                item.setPosition(new LatLng(item.getPosition().latitude + OFFSET,
-                        item.getPosition().longitude + OFFSET));
-            }
-        }*/
-
         mClusterItems.put(item.getUserId(), item);
-
 
         super.clearItems();
         super.cluster();
         super.addItems(mClusterItems.values());
-
-        //super.getAlgorithm().addItems(mClusterItems.values());
+        super.cluster();
     }
 
     public boolean hasItemOfUser(int userId) {

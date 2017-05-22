@@ -19,8 +19,8 @@ public interface Constants {
     String LAST_NAME = "lastName";
 
     double OFFSET = 0.0002;
-    int LOCATION_INTERVAL = 10000;
-    int LOCATION_FASTEST_INTERVAL = 5000;
+    int LOCATION_INTERVAL = 60000;
+    int LOCATION_FASTEST_INTERVAL = 30000;
 
     String API_URL = "https://rocky-river-45878.herokuapp.com/api";
     String INITIAL_COOKIE_ENDPOINT = API_URL + "/config.json";

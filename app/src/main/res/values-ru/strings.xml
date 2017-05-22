@@ -23,7 +23,7 @@
     <string name="login_failed">Ошибка при входе в аккаунт</string>
     <string name="login_successfull">Вы успешно вошли в аккаунт</string>
     <string name="sign_in_button">Войти с Google</string>
-    <string name="welcome_message">Войдите с Google чтобы начать использовать приложения</string>
+    <string name="welcome_message">Войдите через Google чтобы использовать приложениe</string>
 
     <!-- For Create Group activity-->
     <string name="lets_create_new_group">Создайте новую группу</string>
@@ -58,7 +58,7 @@
     <string name="group_identity_field">Код группы</string>
     <string name="joined_dialog_title">Вы присоединились к группе</string>
     <string name="joined_dialog_message">Переходим к карте</string>
-    <string name="no_invite_for_user_dialog_title">Извините, для вас нет приглашения в эту группу</string>
+    <string name="no_invite_for_user_dialog_title">Извините, у вас нет приглашения в эту группу</string>
     <string name="no_invite_for_user_dialog_message">Вы должны быть приглашены, чтобы присоединиться</string>
 
     <!-- For Group Info activity -->
