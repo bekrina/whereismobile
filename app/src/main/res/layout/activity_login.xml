@@ -11,18 +11,47 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/maps_background"
-            android:scaleType="centerCrop" />
+            android:scaleType="centerCrop"
+            android:alpha="0.6"/>
+
+        <TextView
+            android:id="@+id/app_name"
+            android:layout_above="@+id/welcome_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="180dp"
+            android:text="@string/app_name"
+            android:textColor="@color/actionbar_green"
+            android:textSize="80sp"
+            android:textAlignment="center"
+            android:layout_centerHorizontal="true"/>
+
+        <TextView
+            android:id="@+id/welcome_message"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:text="@string/welcome_message"
+            android:layout_above="@+id/sign_in_button"
+            android:layout_marginBottom="30dp"
+            android:textSize="20sp"
+            android:textColor="@color/actionbar_green"
+            android:textAlignment="center"
+            android:layout_centerHorizontal="true"/>
 
         <Button
             android:id="@+id/sign_in_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="200dp"
+            android:layout_height="60dp"
             android:layout_centerInParent="true"
             android:layout_centerVertical="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="100dp"
             android:visibility="visible"
             android:background="@drawable/btn_google_signin_light_normal_hdpi"
             android:text="@string/common_signin_button_text_long"
             android:theme="@style/Widget.AppCompat.Button"
+            android:textColor="@color/primarydark_green"
+            android:textAlignment="center"
             tools:visibility="gone" />
 
 </RelativeLayout>

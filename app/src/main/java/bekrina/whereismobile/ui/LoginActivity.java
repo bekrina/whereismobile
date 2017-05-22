@@ -1,8 +1,10 @@
 package bekrina.whereismobile.ui;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -36,7 +38,7 @@ import static bekrina.whereismobile.util.Constants.LOGIN_ENDPOINT;
 import static bekrina.whereismobile.util.Constants.USER;
 import static bekrina.whereismobile.util.Constants.USER_INFO_PREFERENCES;
 
-public class LoginActivity extends AppCompatActivity implements
+public class LoginActivity extends FragmentActivity implements
         GoogleApiClient.OnConnectionFailedListener,
         View.OnClickListener {
     public static final String TAG = LoginActivity.class.getName();

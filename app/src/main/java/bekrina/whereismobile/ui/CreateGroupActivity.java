@@ -15,7 +15,6 @@ import bekrina.whereismobile.services.RestManager;
 
 public class CreateGroupActivity extends AppCompatActivity
         implements CreateGroupListener {
-    //TODO: объединить похожие активити с создать родительский класс
     private static final String TAG = CreateGroupActivity.class.getName();
 
     private RestManager mRestManager;

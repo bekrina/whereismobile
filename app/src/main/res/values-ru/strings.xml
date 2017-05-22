@@ -2,7 +2,6 @@
 <resources>
     <string name="app_name">WhereIs</string>
     <string name="title_text">WhereIs</string>
-    <string name="welcome_message">Чтобы использовать приложение войдите с помощью аккаунта Google</string>
     <string name="ok">Ок</string>
 
     <!-- Google Play Services error for Toast -->
@@ -24,6 +23,7 @@
     <string name="login_failed">Ошибка при входе в аккаунт</string>
     <string name="login_successfull">Вы успешно вошли в аккаунт</string>
     <string name="sign_in_button">Войти с Google</string>
+    <string name="welcome_message">Войдите с Google чтобы начать использовать приложения</string>
 
     <!-- For Create Group activity-->
     <string name="lets_create_new_group">Создайте новую группу</string>
