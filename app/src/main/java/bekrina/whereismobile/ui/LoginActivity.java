@@ -26,11 +26,15 @@ import com.google.gson.Gson;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Properties;
 
 import bekrina.whereismobile.R;
 import bekrina.whereismobile.model.User;
+import bekrina.whereismobile.services.App;
 import bekrina.whereismobile.util.SingletonNetwork;
+import retrofit2.Call;
+import retrofit2.Callback;
 
 import static android.provider.AlarmClock.EXTRA_MESSAGE;
 import static bekrina.whereismobile.util.Constants.INITIAL_COOKIE_ENDPOINT;
@@ -86,22 +90,18 @@ public class LoginActivity extends FragmentActivity implements
 
     private void getAuthCode() {
         // Get unique cookie from server
-        StringRequest requestCookie = new StringRequest(Request.Method.GET, INITIAL_COOKIE_ENDPOINT,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
-                        startActivityForResult(signInIntent, RC_GET_AUTH_CODE);
-                    }
-                }, new Response.ErrorListener() {
+        App.getApi().getAuthCode().enqueue(new Callback<HashMap>() {
             @Override
-            public void onErrorResponse(VolleyError error) {
-                //mTextView.setText(getString(R.string.error_during_login));
+            public void onResponse(Call<HashMap> call, retrofit2.Response<HashMap> response) {
+                Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+                startActivityForResult(signInIntent, RC_GET_AUTH_CODE);
             }
-        }
-        );
-        mNetwork.getRequestQueue().add(requestCookie);
 
+            @Override
+            public void onFailure(Call<HashMap> call, Throwable t) {
+                Log.e(TAG, "getAuthCode: ", t);
+            }
+        });
     }
 
     @Override
@@ -119,31 +119,20 @@ public class LoginActivity extends FragmentActivity implements
 
                 final byte[] authCodeBytes = authCode.getBytes();
 
-                JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, LOGIN_ENDPOINT,
-                        null, new Response.Listener<JSONObject>() {
-                                @Override
-                                public void onResponse(JSONObject response) {
-                                    Gson gson = new Gson();
-                                    if (gson.fromJson(response.toString(), User.class) != null) {
-                                        SharedPreferences sharedPreferences = getSharedPreferences(USER_INFO_PREFERENCES, 0);
-                                        sharedPreferences.edit().putString(USER, response.toString()).apply();
-                                        Intent intent = new Intent(LoginActivity.this, MapActivity.class);
-                                        startActivity(intent);
-                                    }
-                                }
-                            }, new Response.ErrorListener() {
-                                @Override
-                                public void onErrorResponse(VolleyError error) {
-                                }
-                            }) {
+                App.getApi().login(authCodeBytes).enqueue(new Callback<User>() {
                     @Override
-                    public byte[] getBody() {
-                        return authCodeBytes;
+                    public void onResponse(Call<User> call, retrofit2.Response<User> response) {
+                        SharedPreferences sharedPreferences = getSharedPreferences(USER_INFO_PREFERENCES, 0);
+                        sharedPreferences.edit().putString(USER, new Gson().toJson(response.body())).apply();
+                        Intent intent = new Intent(LoginActivity.this, MapActivity.class);
+                        startActivity(intent);
                     }
-                };
 
-                // Add the request to the RequestQueue.
-                mNetwork.getRequestQueue().add(request);
+                    @Override
+                    public void onFailure(Call<User> call, Throwable t) {
+                        Log.e(TAG, "onActivityResult (login): ", t);
+                    }
+                });
             } else {
                 //TODO: show error message
                 Log.e(TAG, "OnActivityResult: wrong request code");

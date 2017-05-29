@@ -32,6 +32,8 @@ import bekrina.whereismobile.model.Invite;
 import bekrina.whereismobile.ui.LoginActivity;
 import bekrina.whereismobile.util.Constants;
 import bekrina.whereismobile.util.SingletonNetwork;
+import retrofit2.Call;
+import retrofit2.Callback;
 
 import static bekrina.whereismobile.util.Constants.GET_GROUPS_ACTION;
 import static bekrina.whereismobile.util.Constants.GROUP;
@@ -92,29 +94,24 @@ public class RestManager {
     }
 
     public void processGroupStatus(final GroupStatusListener listener) {
-        JsonArrayRequest groupRequest = new JsonArrayRequest(Request.Method.GET,
-                GROUP_ENDPOINT + GET_GROUPS_ACTION, null,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(JSONArray response) {
-                        if (response.optJSONObject(0) == null) {
-                            listener.onUserWithoutGroup();
-                        } else {
-                            Gson gson = new Gson();
-                            Group group = gson.fromJson(response.optJSONObject(0).toString(), Group.class);
-                            updateGroupInfoPreferences(response.optJSONObject(0).toString());
-                            listener.onUserHasGroup(group);
-                        }
-                    }
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.e(TAG, "tokenRequest.onErrorResponse:", error);
-                        listener.onUserWithoutGroup();
+
+        App.getApi().getGroup().enqueue(new Callback<Group>() {
+            @Override
+            public void onResponse(Call<Group> call, retrofit2.Response<Group> response) {
+                if (response.body() == null) {
+                    listener.onUserWithoutGroup();
+                } else {
+                    Group group = response.body();
+                    updateGroupInfoPreferences(new Gson().toJson(response.body()));
+                    listener.onUserHasGroup(group);
                 }
-        }) {
-        };
-        mNetwork.getRequestQueue().add(groupRequest);
+            }
+            @Override
+            public void onFailure(Call<Group> call, Throwable t) {
+                Log.e(TAG, "tokenRequest.onErrorResponse:", t);
+                listener.onUserWithoutGroup();
+            }
+        });
     }
 
     private void updateGroupInfoPreferences(String jsonGroup) {
