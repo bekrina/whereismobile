@@ -1,8 +1,7 @@
-package bekrina.whereismobile.services;
+package bekrina.whereismobile.util.network;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
 
@@ -12,13 +11,11 @@ import com.android.volley.Response;
 import com.android.volley.ServerError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.HttpHeaderParser;
-import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.gson.Gson;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -29,13 +26,12 @@ import bekrina.whereismobile.listeners.JoinedToGroupListener;
 import bekrina.whereismobile.listeners.LeaveGroupListener;
 import bekrina.whereismobile.model.Group;
 import bekrina.whereismobile.model.Invite;
-import bekrina.whereismobile.ui.LoginActivity;
+import bekrina.whereismobile.util.App;
 import bekrina.whereismobile.util.Constants;
 import bekrina.whereismobile.util.SingletonNetwork;
 import retrofit2.Call;
 import retrofit2.Callback;
 
-import static bekrina.whereismobile.util.Constants.GET_GROUPS_ACTION;
 import static bekrina.whereismobile.util.Constants.GROUP;
 import static bekrina.whereismobile.util.Constants.GROUP_ENDPOINT;
 import static bekrina.whereismobile.util.Constants.GROUP_INFO_PREFERENCES;

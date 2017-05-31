@@ -1,4 +1,4 @@
-package bekrina.whereismobile.exceptions;
+package bekrina.whereismobile.util.exceptions;
 
 
 public class PermissionRequiredException extends Exception {

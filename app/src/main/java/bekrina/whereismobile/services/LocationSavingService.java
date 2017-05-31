@@ -33,9 +33,7 @@ import com.google.gson.Gson;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.sql.Timestamp;
-
-import bekrina.whereismobile.exceptions.PermissionRequiredException;
+import bekrina.whereismobile.util.exceptions.PermissionRequiredException;
 import bekrina.whereismobile.model.Group;
 import bekrina.whereismobile.util.SingletonNetwork;
 

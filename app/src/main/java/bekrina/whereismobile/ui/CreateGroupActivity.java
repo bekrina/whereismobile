@@ -11,7 +11,7 @@ import android.widget.EditText;
 
 import bekrina.whereismobile.R;
 import bekrina.whereismobile.listeners.CreateGroupListener;
-import bekrina.whereismobile.services.RestManager;
+import bekrina.whereismobile.util.network.RestManager;
 
 public class CreateGroupActivity extends AppCompatActivity
         implements CreateGroupListener {

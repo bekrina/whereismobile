@@ -1,4 +1,4 @@
-package bekrina.whereismobile.services;
+package bekrina.whereismobile.util.network;
 
 import java.util.HashMap;
 
