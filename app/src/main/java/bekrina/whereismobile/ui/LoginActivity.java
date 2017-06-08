@@ -55,8 +55,16 @@ public class LoginActivity extends FragmentActivity implements
         // Button click listeners
         findViewById(R.id.sign_in_button).setOnClickListener(this);
 
+        Properties properties = new Properties();
+        try {
+            properties.load(getAssets().open(PROPERTIES_FILE));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(CLIENT_ID_PROPERTY)
+                .requestIdToken(properties.getProperty(CLIENT_ID_PROPERTY))
                 .requestEmail()
                 .build();
 

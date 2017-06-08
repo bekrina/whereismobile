@@ -23,7 +23,6 @@ public interface Constants {
     int LOCATION_FASTEST_INTERVAL = 30000;
 
     String API_URL = "https://rocky-river-45878.herokuapp.com/api";
-    String INITIAL_COOKIE_ENDPOINT = API_URL + "/config.json";
     String LOGIN_ENDPOINT = API_URL + "/login";
     String GROUP_ENDPOINT = API_URL + "/group";
     String GET_GROUPS_ACTION = "/getforcurrentuser";
