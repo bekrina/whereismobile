@@ -20,14 +20,14 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyDCfgU5IUbOGY5NPvtWcumR7CFjhwEuIV0"/>
-        <activity android:name=".ui.LoginActivity" >
+        <activity android:name=".ui.MapActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.MapActivity" >
+        <activity android:name=".ui.LoginActivity" >
         </activity>
         <activity android:name=".ui.CreateGroupActivity" >
         </activity>

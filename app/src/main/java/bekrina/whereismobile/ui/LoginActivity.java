@@ -62,7 +62,6 @@ public class LoginActivity extends FragmentActivity implements
             e.printStackTrace();
         }
 
-
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(properties.getProperty(CLIENT_ID_PROPERTY))
                 .requestEmail()
@@ -109,6 +108,9 @@ public class LoginActivity extends FragmentActivity implements
                 }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
+                        Log.e(TAG, "OnActivityResult: error during authentication request", error);
+                        AuthenticationFailureDialogFragment failureDialog = new AuthenticationFailureDialogFragment();
+                        failureDialog.show(getFragmentManager(), TAG);
                     }
                 }) {
                     @Override
@@ -116,13 +118,16 @@ public class LoginActivity extends FragmentActivity implements
                         return authCodeBytes;
                     }
                 };
-
-                // Add the request to the RequestQueue.
                 mNetwork.getRequestQueue().add(request);
+            } else {
+                Log.e(TAG, "OnActivityResult: authentication rejected by Google");
+                AuthenticationFailureDialogFragment failureDialog = new AuthenticationFailureDialogFragment();
+                failureDialog.show(getFragmentManager(), TAG);
             }
         } else {
-                //TODO: show error message
-                Log.e(TAG, "OnActivityResult: wrong request code");
+            Log.e(TAG, "OnActivityResult: wrong request code");
+            AuthenticationFailureDialogFragment failureDialog = new AuthenticationFailureDialogFragment();
+            failureDialog.show(getFragmentManager(), TAG);
         }
     }
 
@@ -131,6 +136,8 @@ public class LoginActivity extends FragmentActivity implements
         // An unresolvable error has occurred and Google APIs (including Sign-In) will not
         // be available.
         Log.d(TAG, "onConnectionFailed:" + connectionResult);
+        AuthenticationFailureDialogFragment failureDialog = new AuthenticationFailureDialogFragment();
+        failureDialog.show(getFragmentManager(), TAG);
     }
 
     @Override

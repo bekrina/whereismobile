@@ -63,6 +63,7 @@ import bekrina.whereismobile.services.MembersLocationsService;
 import bekrina.whereismobile.util.Constants;
 import bekrina.whereismobile.util.GoogleApiHelper;
 
+import static bekrina.whereismobile.util.Constants.GROUP_INFO_PREFERENCES;
 import static bekrina.whereismobile.util.Constants.LOCATION_FASTEST_INTERVAL;
 import static bekrina.whereismobile.util.Constants.LOCATION_INTERVAL;
 import static bekrina.whereismobile.util.Constants.OFFSET;
@@ -122,25 +123,30 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate");
 
-        setContentView(R.layout.activity_map);
+        if (checkLogin()) {
+            setContentView(R.layout.activity_map);
 
-        mRestManager = RestManager.getInstance(this);
-        mGoogleApiHelper = new GoogleApiHelper(this);
+            mRestManager = RestManager.getInstance(this);
+            mGoogleApiHelper = new GoogleApiHelper(this);
 
-        MapFragment mapFragment = (MapFragment) getFragmentManager()
-                .findFragmentById(R.id.map);
+            MapFragment mapFragment = (MapFragment) getFragmentManager()
+                    .findFragmentById(R.id.map);
 
-        SharedPreferences sharedPreferences = getSharedPreferences(USER_INFO_PREFERENCES, 0);
-        Gson gson = new Gson();
-        String userJson = sharedPreferences.getString(USER, "");
-        if (!userJson.equals("")) {
-            currentUser = gson.fromJson(userJson, User.class);
+            SharedPreferences sharedPreferences = getSharedPreferences(USER_INFO_PREFERENCES, 0);
+            Gson gson = new Gson();
+            String userJson = sharedPreferences.getString(USER, "");
+            if (!userJson.equals("")) {
+                currentUser = gson.fromJson(userJson, User.class);
+            } else {
+                Log.e(TAG, "onCreate: No current user in shared preferences");
+                throw new NoCurrentUserException("No current user in shared preferences");
+            }
+
+            mapFragment.getMapAsync(this);
         } else {
-            Log.e(TAG, "onCreate: No current user in shared preferences");
-            throw new NoCurrentUserException("No current user in shared preferences");
+            startActivity(new Intent(this, LoginActivity.class));
+            this.finish();
         }
-
-        mapFragment.getMapAsync(this);
 
     }
 
@@ -228,6 +234,16 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             }
             // other 'case' lines to check for other
             // permissions this app might request
+        }
+    }
+
+    public boolean checkLogin() {
+        SharedPreferences userInfoPreferences = getSharedPreferences(USER_INFO_PREFERENCES, 0);
+        String user = userInfoPreferences.getString(USER, "");
+        if (!user.equals("")) {
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -423,6 +439,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     @Override
     public void onSignOut() {
+        SharedPreferences sharedPreferencesUser = getSharedPreferences(USER_INFO_PREFERENCES, 0);
+        sharedPreferencesUser.edit().clear().apply();
+        SharedPreferences sharedPreferencesGroup = getSharedPreferences(GROUP_INFO_PREFERENCES, 0);
+        sharedPreferencesGroup.edit().clear().apply();
         // Start login activity
         Intent loginActivityIntent = new Intent(this, LoginActivity.class);
         startActivity(loginActivityIntent);

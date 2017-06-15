@@ -24,6 +24,7 @@
     <string name="login_successfull">Вы успешно вошли в аккаунт</string>
     <string name="sign_in_button">Войти с Google</string>
     <string name="welcome_message">Войдите через Google чтобы использовать приложениe</string>
+    <string name="authentication_error">Ошибка авторизации</string>
 
     <!-- For Create Group activity-->
     <string name="lets_create_new_group">Создайте новую группу</string>
