@@ -19,15 +19,15 @@
             android:value="@integer/google_play_services_version" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyBQAKQpu-OOK2-nZERl_prHntkGj1x7ieM"/>
-        <activity android:name=".ui.LoginActivity" >
+            android:value="AIzaSyDCfgU5IUbOGY5NPvtWcumR7CFjhwEuIV0"/>
+        <activity android:name=".ui.MapActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.MapActivity" >
+        <activity android:name=".ui.LoginActivity" >
         </activity>
         <activity android:name=".ui.CreateGroupActivity" >
         </activity>
