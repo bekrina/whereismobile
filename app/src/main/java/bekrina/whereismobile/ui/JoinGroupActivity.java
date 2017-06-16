@@ -11,7 +11,7 @@ import android.widget.EditText;
 
 import bekrina.whereismobile.R;
 import bekrina.whereismobile.listeners.JoinedToGroupListener;
-import bekrina.whereismobile.services.RestManager;
+import bekrina.whereismobile.util.restapi.RestManager;
 
 public class JoinGroupActivity extends AppCompatActivity implements JoinedToGroupListener {
     public static final String TAG = JoinGroupActivity.class.getName();

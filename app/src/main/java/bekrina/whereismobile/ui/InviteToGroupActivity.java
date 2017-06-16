@@ -11,7 +11,7 @@ import android.widget.EditText;
 
 import bekrina.whereismobile.R;
 import bekrina.whereismobile.listeners.InviteStatusListener;
-import bekrina.whereismobile.services.RestManager;
+import bekrina.whereismobile.util.restapi.RestManager;
 import bekrina.whereismobile.util.Validation;
 
 public class InviteToGroupActivity extends AppCompatActivity implements InviteStatusListener {
