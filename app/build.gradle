@@ -66,6 +66,9 @@ dependencies {
     compile 'com.squareup.retrofit2:retrofit:2.3.0'
     compile 'com.squareup.retrofit2:converter-gson:2.3.0'
     compile 'com.squareup.okhttp3:okhttp-urlconnection:3.8.0'
+    compile 'com.squareup.okhttp3:logging-interceptor:3.8.0'
+
+    compile 'com.github.franmontiel:PersistentCookieJar:v1.0.1'
 }
 
 apply plugin: 'com.google.gms.google-services'

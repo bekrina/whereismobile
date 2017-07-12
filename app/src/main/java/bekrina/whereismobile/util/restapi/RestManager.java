@@ -19,6 +19,8 @@ import com.google.gson.Gson;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Set;
+
 import bekrina.whereismobile.listeners.CreateGroupListener;
 import bekrina.whereismobile.listeners.GroupStatusListener;
 import bekrina.whereismobile.listeners.InviteStatusListener;
@@ -90,19 +92,19 @@ public class RestManager {
 
     public void processGroupStatus(final GroupStatusListener listener) {
 
-        RestApiFactory.getApi(mContext).getGroup().enqueue(new Callback<Group>() {
+        RestApiFactory.getApi(mContext).getGroup().enqueue(new Callback<Set<Group>>() {
             @Override
-            public void onResponse(Call<Group> call, retrofit2.Response<Group> response) {
-                if (response.body() == null) {
+            public void onResponse(Call<Set<Group>> call, retrofit2.Response<Set<Group>> response) {
+                Set<Group> groups = response.body();
+                if (groups == null) {
                     listener.onUserWithoutGroup();
                 } else {
-                    Group group = response.body();
-                    updateGroupInfoPreferences(new Gson().toJson(response.body()));
-                    listener.onUserHasGroup(group);
+                    updateGroupInfoPreferences(new Gson().toJson(groups));
+                    listener.onUserHasGroup(groups.iterator().next());
                 }
             }
             @Override
-            public void onFailure(Call<Group> call, Throwable t) {
+            public void onFailure(Call<Set<Group>> call, Throwable t) {
                 Log.e(TAG, "tokenRequest.onErrorResponse:", t);
                 listener.onUserWithoutGroup();
             }
